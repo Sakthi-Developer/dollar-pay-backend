@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, field_validator
 import psycopg
 from psycopg.rows import dict_row
@@ -7,6 +8,14 @@ import re
 import os
 
 app = FastAPI(title="Dollar Pay API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 DATABASE_URL = "postgresql://neondb_owner:npg_PJmsvHaC40Fk@ep-damp-lake-a4gktx6k-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require"
 
