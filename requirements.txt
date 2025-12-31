@@ -1,5 +1,8 @@
 fastapi
-uvicorn
+uvicorn[standard]
 psycopg[binary]
 bcrypt
 pydantic
+pydantic-settings
+python-dotenv
+pyjwt
