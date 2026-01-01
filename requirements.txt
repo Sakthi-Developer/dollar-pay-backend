@@ -1,4 +1,4 @@
-﻿annotated-doc
+annotated-doc
 annotated-types
 anyio
 bcrypt

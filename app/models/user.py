@@ -80,3 +80,36 @@ class BindUPI(BaseModel):
         if not re.match(r"^[\w.-]+@[\w]+$", v):
             raise ValueError("Invalid UPI ID format")
         return v
+
+
+class AdminRegister(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+    role: Optional[str] = "admin"
+
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, v):
+        if len(v) < 3:
+            raise ValueError("Username must be at least 3 characters")
+        if not re.match(r"^[a-zA-Z0-9_]+$", v):
+            raise ValueError("Username can only contain letters, numbers, and underscores")
+        return v
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v):
+        if len(v) < 8:
+            raise ValueError("Password must be at least 8 characters")
+        return v
+
+
+class AdminResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+    role: str
+    is_active: bool
+    created_at: datetime
+    message: str

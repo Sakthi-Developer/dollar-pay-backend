@@ -6,6 +6,8 @@ from app.models.user import (
     TokenResponse,
     UpdateProfile,
     BindUPI,
+    AdminRegister,
+    AdminResponse,
 )
 from app.models.transaction import (
     TransactionType,

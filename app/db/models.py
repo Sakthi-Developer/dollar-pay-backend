@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, DECIMAL, Text, BigInteger, ForeignKey, JSON, UniqueConstraint, Index, CheckConstraint
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, DECIMAL, Text, BigInteger, ForeignKey, JSON, UniqueConstraint, Index, CheckConstraint, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 
@@ -59,8 +59,8 @@ class Admin(Base):
     role = Column(String(20), default='admin', nullable=False)
     permissions = Column(JSON)
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default='CURRENT_TIMESTAMP')
-    updated_at = Column(DateTime, default='CURRENT_TIMESTAMP')
+    created_at = Column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+    updated_at = Column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
     last_login_at = Column(DateTime, nullable=True)
 
     # Relationships

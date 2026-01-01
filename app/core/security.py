@@ -100,3 +100,14 @@ def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(securi
         "is_active": admin.is_active,
         "created_at": admin.created_at
     }
+
+
+def get_current_super_admin(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+    """Get current super admin user."""
+    admin_data = get_current_admin(credentials)
+    if admin_data["role"] != "super_admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Super admin access required",
+        )
+    return admin_data

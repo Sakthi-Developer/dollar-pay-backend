@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
-from app.models import UserRegister, UserLogin, UserResponse, TokenResponse, UserProfile
+from app.models import UserRegister, UserLogin, UserResponse, TokenResponse, UserProfile, AdminRegister, AdminResponse
 from app.db.database import get_db_context
 from app.db.models import User, TeamMember, Admin
-from app.core.security import get_current_user, create_access_token
+from app.core.security import get_current_user, create_access_token, get_current_super_admin
 import bcrypt
 import secrets
 import string
@@ -145,6 +145,40 @@ def login(user: UserLogin):
             access_token=access_token,
             user=user_profile
         )
+
+
+@router.post("/admin/register", response_model=AdminResponse)
+def admin_register(admin: AdminRegister, current_super_admin: dict = Depends(get_current_super_admin)):
+    """Register a new admin user. Only super admins can create new admins."""
+    # TODO: Add authentication check for super admin
+    # For now, allowing registration without auth for initial setup
+    
+    with get_db_context() as db:
+        password_hash = hash_password(admin.password)
+        
+        try:
+            new_admin = Admin(
+                username=admin.username,
+                email=admin.email,
+                password_hash=password_hash,
+                role=admin.role
+            )
+            db.add(new_admin)
+            db.commit()
+            db.refresh(new_admin)
+
+            return AdminResponse(
+                id=new_admin.id,
+                username=new_admin.username,
+                email=new_admin.email,
+                role=new_admin.role,
+                is_active=new_admin.is_active,
+                created_at=new_admin.created_at,
+                message="Admin registered successfully"
+            )
+        except IntegrityError:
+            db.rollback()
+            raise HTTPException(status_code=400, detail="Username or email already exists")
 
 
 @router.post("/admin/login", response_model=TokenResponse)
