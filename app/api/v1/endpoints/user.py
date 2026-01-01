@@ -15,7 +15,7 @@ def get_profile(
     db: Session = Depends(get_db)
 ):
     """Get current user profile with wallet balance and team stats."""
-    return user_service.get_user_profile(db, current_user.id)
+    return user_service.get_user_profile(db, current_user['id'])
 
 @router.get("/team", response_model=List[TeamMemberSchema])
 def get_team(
@@ -23,7 +23,7 @@ def get_team(
     db: Session = Depends(get_db)
 ):
     """Get list of team members referred by the current user."""
-    return user_service.get_team_members(db, current_user.id)
+    return user_service.get_team_members(db, current_user['id'])
 
 @router.get("/commissions", response_model=List[CommissionSchema])
 def get_commissions(
@@ -31,4 +31,4 @@ def get_commissions(
     db: Session = Depends(get_db)
 ):
     """Get history of commissions earned."""
-    return user_service.get_commissions(db, current_user.id)
+    return user_service.get_commissions(db, current_user['id'])

@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Form
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from typing import List, Optional
 from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.core.security import get_current_user, get_current_admin
-from app.schemas.transaction import TransactionResponse, TransactionDetail, WithdrawalCreate, AdminTransactionApproval, SettingUpdate
+from app.schemas.transaction import TransactionResponse, TransactionDetail, WithdrawalCreate, AdminTransactionApproval
+from app.schemas.settings import SettingUpdate
 from app.services.transaction_service import transaction_service
 from app.models.transaction import Transaction
 from app.models.settings import PlatformSetting

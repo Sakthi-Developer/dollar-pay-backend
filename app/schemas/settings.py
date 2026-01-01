@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from decimal import Decimal
+from typing import Optional
 
 
 class PlatformSettings(BaseModel):
@@ -15,3 +16,10 @@ class PlatformSettings(BaseModel):
     telegram_support_url: str
     trc20_wallet_address: str
     erc20_wallet_address: str
+
+
+class SettingUpdate(BaseModel):
+    setting_key: str
+    setting_value: str
+    data_type: str = "string"
+    description: Optional[str] = None
