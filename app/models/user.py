@@ -108,3 +108,13 @@ class AdminRegister(BaseModel):
 class AdminLogin(BaseModel):
     username: str
     password: str
+
+
+class AdminResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+    role: str
+    is_active: bool
+    created_at: datetime
+    message: str

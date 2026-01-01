@@ -52,7 +52,7 @@ def init_platform_settings():
         },
         {
             "setting_key": "telegram_support_url",
-            "setting_value": "https://t.me/showpay_support",
+            "setting_value": "https://t.me/dollarpay_support",
             "data_type": "string",
             "description": "Telegram support link"
         },
