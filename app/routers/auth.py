@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 from app.models import UserRegister, UserLogin, UserResponse, TokenResponse, UserProfile
 from app.db.database import get_db_context
-from app.db.models import User, TeamMember
+from app.db.models import User, TeamMember, Admin
 from app.core.security import get_current_user, create_access_token
 import bcrypt
 import secrets
@@ -144,6 +144,53 @@ def login(user: UserLogin):
         return TokenResponse(
             access_token=access_token,
             user=user_profile
+        )
+
+
+@router.post("/admin/login", response_model=TokenResponse)
+def admin_login(user: UserLogin):
+    """Admin login with username and password. Returns JWT token."""
+    with get_db_context() as db:
+        db_admin = db.query(Admin).filter_by(username=user.phone_number).first()  # Using phone_number field for username
+
+        if not db_admin:
+            raise HTTPException(status_code=401, detail="Invalid username or password")
+
+        if not verify_password(user.password, db_admin.password_hash):
+            raise HTTPException(status_code=401, detail="Invalid username or password")
+
+        if not db_admin.is_active:
+            raise HTTPException(status_code=403, detail="Account is inactive")
+
+        # Update last login
+        db_admin.last_login_at = datetime.now(timezone.utc)
+        db.commit()
+
+        # Create access token
+        access_token = create_access_token(data={"sub": str(db_admin.id)})
+
+        # Return token with admin info (using user field for compatibility)
+        admin_profile = UserProfile(
+            id=db_admin.id,
+            phone_number=db_admin.username,
+            referral_code="",
+            name=db_admin.username,
+            email=db_admin.email,
+            wallet_balance=0.0,
+            total_deposited=0.0,
+            total_withdrawn=0.0,
+            total_commission_earned=0.0,
+            upi_id="",
+            upi_holder_name="",
+            bank_name="",
+            is_upi_bound=False,
+            is_active=db_admin.is_active,
+            created_at=db_admin.created_at
+        )
+
+        return TokenResponse(
+            access_token=access_token,
+            user=admin_profile
         )
 
 

@@ -5,7 +5,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.core.config import settings
 from app.db.database import get_db_context
-from app.db.models import User
+from app.db.models import User, Admin
 
 security = HTTPBearer()
 
@@ -71,4 +71,32 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
         "is_upi_bound": user.is_upi_bound,
         "is_active": user.is_active,
         "created_at": user.created_at
+    }
+
+
+def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+    payload = decode_token(credentials.credentials)
+    admin_id = payload.get("sub")
+    if admin_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload",
+        )
+
+    with get_db_context() as db:
+        admin = db.query(Admin).filter_by(id=int(admin_id), is_active=True).first()
+        if admin is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Admin not found or inactive",
+            )
+
+    return {
+        "id": admin.id,
+        "username": admin.username,
+        "email": admin.email,
+        "role": admin.role,
+        "permissions": admin.permissions,
+        "is_active": admin.is_active,
+        "created_at": admin.created_at
     }
