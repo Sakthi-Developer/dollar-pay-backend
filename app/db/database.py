@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import QueuePool
-from app.db.models import Base, User
+from app.models import Base
 from app.core.config import settings
 from contextlib import contextmanager
 

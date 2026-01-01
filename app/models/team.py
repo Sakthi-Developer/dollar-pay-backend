@@ -1,25 +1,21 @@
-from pydantic import BaseModel
-from datetime import datetime
-from decimal import Decimal
-from typing import Optional
+from sqlalchemy import Column, Integer, DateTime, BigInteger, ForeignKey, UniqueConstraint
+from sqlalchemy.orm import relationship
+from app.models.base import Base
 
+class TeamMember(Base):
+    __tablename__ = 'team_members'
 
-class TeamMember(BaseModel):
-    id: int
-    user_id: int
-    phone_number: str
-    name: Optional[str] = None
-    level: int
-    total_deposited: Decimal = Decimal("0.00")
-    joined_at: datetime
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    parent_user_id = Column(BigInteger, ForeignKey('users.id'), nullable=False)
+    child_user_id = Column(BigInteger, ForeignKey('users.id'), nullable=False)
+    level = Column(Integer, default=1)
 
-    class Config:
-        from_attributes = True
+    created_at = Column(DateTime, default='CURRENT_TIMESTAMP')
 
+    # Relationships
+    parent = relationship("User", foreign_keys=[parent_user_id], back_populates="team_members")
+    child = relationship("User", foreign_keys=[child_user_id], back_populates="child_team_members")
 
-class TeamStats(BaseModel):
-    total_members: int
-    direct_members: int
-    indirect_members: int
-    total_commission_earned: Decimal
-    team_total_deposited: Decimal
+    __table_args__ = (
+        UniqueConstraint('parent_user_id', 'child_user_id'),
+    )

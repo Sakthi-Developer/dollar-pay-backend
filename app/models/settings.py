@@ -1,15 +1,22 @@
-from pydantic import BaseModel
-from decimal import Decimal
+from sqlalchemy import Column, Integer, String, DateTime, Text, BigInteger, ForeignKey, CheckConstraint
+from sqlalchemy.orm import relationship
+from app.models.base import Base
 
+class PlatformSetting(Base):
+    __tablename__ = 'platform_settings'
 
-class PlatformSettings(BaseModel):
-    usdt_to_inr_rate: Decimal
-    platform_fee_percent: Decimal
-    bonus_percent: Decimal
-    inr_bonus_ratio: Decimal
-    commission_percent: Decimal
-    min_deposit_usdt: Decimal
-    max_deposit_usdt: Decimal
-    telegram_support_url: str
-    trc20_wallet_address: str
-    erc20_wallet_address: str
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    setting_key = Column(String(50), unique=True, nullable=False)
+    setting_value = Column(Text, nullable=False)
+    data_type = Column(String(20), default='string')
+    description = Column(Text)
+
+    updated_by_admin_id = Column(BigInteger, ForeignKey('admins.id'))
+    updated_at = Column(DateTime, default='CURRENT_TIMESTAMP')
+
+    # Relationships
+    updated_by = relationship("Admin", back_populates="settings_updated")
+
+    __table_args__ = (
+        CheckConstraint("data_type IN ('string', 'number', 'boolean', 'json')"),
+    )

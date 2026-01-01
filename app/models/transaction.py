@@ -1,85 +1,53 @@
-from pydantic import BaseModel, field_validator
-from typing import Optional
-from datetime import datetime
-from decimal import Decimal
-from enum import Enum
+from sqlalchemy import Column, String, DateTime, DECIMAL, Text, BigInteger, ForeignKey, CheckConstraint
+from sqlalchemy.orm import relationship
+from app.models.base import Base
 
+class Transaction(Base):
+    __tablename__ = 'transactions'
 
-class TransactionType(str, Enum):
-    DEPOSIT = "deposit"
-    WITHDRAWAL = "withdrawal"
-    COMMISSION = "commission"
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    transaction_uid = Column(String(50), unique=True, nullable=False)
+    user_id = Column(BigInteger, ForeignKey('users.id'), nullable=False)
+    type = Column(String(20), nullable=False)
+    status = Column(String(20), default='pending')
 
+    crypto_network = Column(String(20))
+    crypto_wallet_address = Column(String(100))
+    crypto_amount = Column(DECIMAL(15, 6))
+    crypto_tx_hash = Column(String(100))
 
-class TransactionStatus(str, Enum):
-    PENDING = "pending"
-    PROCESSING = "processing"
-    APPROVED = "approved"
-    REJECTED = "rejected"
-    COMPLETED = "completed"
-    FAILED = "failed"
+    screenshot_url = Column(String(500))
+    user_notes = Column(Text)
 
+    exchange_rate = Column(DECIMAL(10, 2))
+    platform_fee_percent = Column(DECIMAL(5, 2))
+    platform_fee_amount = Column(DECIMAL(15, 2))
+    bonus_percent = Column(DECIMAL(5, 2), default=0)
+    bonus_amount = Column(DECIMAL(15, 2), default=0)
+    gross_inr_amount = Column(DECIMAL(15, 2))
+    net_inr_amount = Column(DECIMAL(15, 2))
 
-class DepositCreate(BaseModel):
-    crypto_network: str
-    crypto_amount: Decimal
-    crypto_tx_hash: Optional[str] = None
-    screenshot_url: Optional[str] = None
-    user_notes: Optional[str] = None
+    user_upi_id = Column(String(100))
+    user_bank_name = Column(String(100))
 
-    @field_validator("crypto_network")
-    @classmethod
-    def validate_network(cls, v):
-        allowed = ["TRC20", "ERC20", "BEP20"]
-        if v.upper() not in allowed:
-            raise ValueError(f"Network must be one of: {', '.join(allowed)}")
-        return v.upper()
+    admin_id = Column(BigInteger, ForeignKey('admins.id'), nullable=True)
+    admin_reviewed_at = Column(DateTime, nullable=True)
+    admin_notes = Column(Text)
+    rejection_reason = Column(Text)
 
-    @field_validator("crypto_amount")
-    @classmethod
-    def validate_amount(cls, v):
-        if v <= 0:
-            raise ValueError("Amount must be greater than 0")
-        return v
+    payment_reference = Column(String(100))
+    payment_completed_at = Column(DateTime, nullable=True)
 
+    created_at = Column(DateTime, default='CURRENT_TIMESTAMP')
+    updated_at = Column(DateTime, default='CURRENT_TIMESTAMP')
 
-class WithdrawalCreate(BaseModel):
-    amount: Decimal
+    # Relationships
+    user = relationship("User", back_populates="transactions")
+    admin = relationship("Admin", back_populates="transactions_reviewed")
+    commissions = relationship("Commission", back_populates="transaction")
+    notifications = relationship("Notification", back_populates="transaction")
 
-    @field_validator("amount")
-    @classmethod
-    def validate_amount(cls, v):
-        if v <= 0:
-            raise ValueError("Amount must be greater than 0")
-        return v
-
-
-class TransactionResponse(BaseModel):
-    id: int
-    transaction_uid: str
-    type: TransactionType
-    status: TransactionStatus
-    crypto_network: Optional[str] = None
-    crypto_amount: Optional[Decimal] = None
-    gross_inr_amount: Optional[Decimal] = None
-    net_inr_amount: Optional[Decimal] = None
-    platform_fee_amount: Optional[Decimal] = None
-    bonus_amount: Optional[Decimal] = None
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class TransactionDetail(TransactionResponse):
-    crypto_wallet_address: Optional[str] = None
-    crypto_tx_hash: Optional[str] = None
-    screenshot_url: Optional[str] = None
-    user_notes: Optional[str] = None
-    exchange_rate: Optional[Decimal] = None
-    user_upi_id: Optional[str] = None
-    rejection_reason: Optional[str] = None
-    payment_reference: Optional[str] = None
-    admin_reviewed_at: Optional[datetime] = None
-    payment_completed_at: Optional[datetime] = None
-    updated_at: datetime
+    __table_args__ = (
+        CheckConstraint("type IN ('crypto_deposit', 'upi_payout', 'withdrawal', 'commission')"),
+        CheckConstraint("status IN ('pending', 'processing', 'approved', 'rejected', 'completed', 'failed')"),
+    )

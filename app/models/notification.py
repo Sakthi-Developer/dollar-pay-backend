@@ -1,24 +1,28 @@
-from pydantic import BaseModel
-from typing import Optional
-from datetime import datetime
-from enum import Enum
+from sqlalchemy import Column, String, Boolean, DateTime, Text, BigInteger, ForeignKey, CheckConstraint
+from sqlalchemy.orm import relationship
+from app.models.base import Base
 
+class Notification(Base):
+    __tablename__ = 'notifications'
 
-class NotificationType(str, Enum):
-    INFO = "info"
-    SUCCESS = "success"
-    WARNING = "warning"
-    TRANSACTION = "transaction"
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    user_id = Column(BigInteger, ForeignKey('users.id'), nullable=False)
 
+    title = Column(String(200), nullable=False)
+    message = Column(Text, nullable=False)
+    type = Column(String(20), default='info')
 
-class NotificationResponse(BaseModel):
-    id: int
-    title: str
-    message: str
-    type: NotificationType
-    is_read: bool
-    related_transaction_id: Optional[int] = None
-    created_at: datetime
+    is_read = Column(Boolean, default=False)
+    read_at = Column(DateTime, nullable=True)
 
-    class Config:
-        from_attributes = True
+    related_transaction_id = Column(BigInteger, ForeignKey('transactions.id'), nullable=True)
+
+    created_at = Column(DateTime, default='CURRENT_TIMESTAMP')
+
+    # Relationships
+    user = relationship("User", back_populates="notifications")
+    transaction = relationship("Transaction", back_populates="transaction")
+
+    __table_args__ = (
+        CheckConstraint("type IN ('info', 'success', 'warning', 'transaction')"),
+    )

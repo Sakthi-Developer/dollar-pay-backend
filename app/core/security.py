@@ -5,7 +5,8 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.core.config import settings
 from app.db.database import get_db_context
-from app.db.models import User, Admin
+from app.models.user import User
+from app.models.admin import Admin
 
 security = HTTPBearer()
 
@@ -111,3 +112,16 @@ def get_current_super_admin(credentials: HTTPAuthorizationCredentials = Depends(
             detail="Super admin access required",
         )
     return admin_data
+
+
+def get_current_user_ws(token: str) -> Optional[tuple[int, str]]:
+    """Validate token for WebSocket connection. Returns (user_id, role)."""
+    try:
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        user_id: str = payload.get("sub")
+        role: str = payload.get("role", "user")
+        if user_id is None:
+            return None
+        return int(user_id), role
+    except jwt.PyJWTError:
+        return None
