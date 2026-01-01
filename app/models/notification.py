@@ -21,7 +21,7 @@ class Notification(Base):
 
     # Relationships
     user = relationship("User", back_populates="notifications")
-    transaction = relationship("Transaction", back_populates="transaction")
+    transaction = relationship("Transaction", back_populates="notifications")
 
     __table_args__ = (
         CheckConstraint("type IN ('info', 'success', 'warning', 'transaction')"),

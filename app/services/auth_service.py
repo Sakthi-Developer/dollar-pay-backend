@@ -11,6 +11,9 @@ from app.models.admin import Admin
 from app.schemas.user import UserRegister, UserLogin, AdminRegister, AdminLogin
 from app.core.security import create_access_token
 
+# Import all models to ensure relationships are configured before queries
+import app.models
+
 class AuthService:
     @staticmethod
     def generate_referral_code(length: int = 8) -> str:
@@ -91,8 +94,8 @@ class AuthService:
             raise HTTPException(status_code=400, detail="Phone number already registered")
 
     @classmethod
-    def login_user(cls, db: Session, login_data: UserLogin) -> dict:
-        from app.schemas.user import UserProfile
+    def login_user(cls, db: Session, login_data: UserLogin):
+        from app.schemas.user import UserProfile, TokenResponse
         
         user = db.query(User).filter_by(phone_number=login_data.phone_number).first()
         if not user or not cls.verify_password(login_data.password, user.password_hash):
@@ -126,11 +129,11 @@ class AuthService:
             created_at=user.created_at
         )
         
-        return {
-            "access_token": access_token,
-            "token_type": "bearer",
-            "user": user_profile
-        }
+        return TokenResponse(
+            access_token=access_token,
+            token_type="bearer",
+            user=user_profile
+        )
 
     @classmethod
     def register_admin(cls, db: Session, admin_data: AdminRegister) -> Admin:
@@ -153,31 +156,39 @@ class AuthService:
             raise HTTPException(status_code=400, detail="Username or email already registered")
 
     @classmethod
-    def login_admin(cls, db: Session, login_data: AdminLogin) -> dict:
-        from app.schemas.user import AdminProfile
+    def login_admin(cls, db: Session, login_data: AdminLogin):
+        from app.schemas.user import AdminProfile, AdminTokenResponse
         
-        admin = db.query(Admin).filter_by(username=login_data.username).first()
-        if not admin or not cls.verify_password(login_data.password, admin.password_hash):
-            raise HTTPException(status_code=401, detail="Invalid username or password")
-        
-        if not admin.is_active:
-            raise HTTPException(status_code=400, detail="Account is inactive")
+        try:
+            admin = db.query(Admin).filter_by(username=login_data.username).first()
+            if not admin:
+                raise HTTPException(status_code=401, detail="Invalid username or password")
+            
+            if not cls.verify_password(login_data.password, admin.password_hash):
+                raise HTTPException(status_code=401, detail="Invalid username or password")
+            
+            if not admin.is_active:
+                raise HTTPException(status_code=400, detail="Account is inactive")
 
-        access_token = create_access_token(data={"sub": str(admin.id), "role": admin.role})
-        
-        admin_profile = AdminProfile(
-            id=admin.id,
-            username=admin.username,
-            email=admin.email,
-            role=admin.role,
-            is_active=admin.is_active,
-            created_at=admin.created_at
-        )
-        
-        return {
-            "access_token": access_token,
-            "token_type": "bearer",
-            "admin": admin_profile
-        }
+            access_token = create_access_token(data={"sub": str(admin.id), "role": admin.role})
+            
+            admin_profile = AdminProfile(
+                id=admin.id,
+                username=admin.username,
+                email=admin.email,
+                role=admin.role,
+                is_active=admin.is_active if admin.is_active is not None else True,
+                created_at=admin.created_at
+            )
+            
+            return AdminTokenResponse(
+                access_token=access_token,
+                token_type="bearer",
+                admin=admin_profile
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 auth_service = AuthService()
