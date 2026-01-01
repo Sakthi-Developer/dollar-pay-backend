@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
-from app.models import UserRegister, UserLogin, UserResponse, TokenResponse, UserProfile, AdminRegister, AdminResponse
+from app.models import UserRegister, UserLogin, UserResponse, TokenResponse, UserProfile, AdminRegister, AdminResponse, AdminLogin
 from app.db.database import get_db_context
 from app.db.models import User, TeamMember, Admin
 from app.core.security import get_current_user, create_access_token, get_current_super_admin
@@ -182,15 +182,15 @@ def admin_register(admin: AdminRegister, current_super_admin: dict = Depends(get
 
 
 @router.post("/admin/login", response_model=TokenResponse)
-def admin_login(user: UserLogin):
+def admin_login(admin_credentials: AdminLogin):
     """Admin login with username and password. Returns JWT token."""
     with get_db_context() as db:
-        db_admin = db.query(Admin).filter_by(username=user.phone_number).first()  # Using phone_number field for username
+        db_admin = db.query(Admin).filter_by(username=admin_credentials.username).first()
 
         if not db_admin:
             raise HTTPException(status_code=401, detail="Invalid username or password")
 
-        if not verify_password(user.password, db_admin.password_hash):
+        if not verify_password(admin_credentials.password, db_admin.password_hash):
             raise HTTPException(status_code=401, detail="Invalid username or password")
 
         if not db_admin.is_active:

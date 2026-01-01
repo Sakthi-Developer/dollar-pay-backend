@@ -105,11 +105,6 @@ class AdminRegister(BaseModel):
         return v
 
 
-class AdminResponse(BaseModel):
-    id: int
+class AdminLogin(BaseModel):
     username: str
-    email: str
-    role: str
-    is_active: bool
-    created_at: datetime
-    message: str
+    password: str
