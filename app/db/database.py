@@ -1,10 +1,29 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.pool import QueuePool
 from app.db.models import Base, User
 from app.core.config import settings
 from contextlib import contextmanager
 
-engine = create_engine(settings.database_url, echo=False)
+# Create engine with connection pooling and SSL parameters for Neon
+engine = create_engine(
+    settings.database_url,
+    echo=False,
+    poolclass=QueuePool,
+    pool_size=5,
+    max_overflow=10,
+    pool_timeout=30,
+    pool_recycle=3600,  # Recycle connections every hour
+    pool_pre_ping=True,  # Enable connection health checks
+    connect_args={
+        "sslmode": "require",
+        "connect_timeout": 10,
+        "keepalives": 1,
+        "keepalives_idle": 30,
+        "keepalives_interval": 10,
+        "keepalives_count": 5,
+    }
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
