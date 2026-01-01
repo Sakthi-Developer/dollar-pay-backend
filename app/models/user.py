@@ -32,12 +32,19 @@ class UserLogin(BaseModel):
 
 class UserProfile(BaseModel):
     id: int
-    name: Optional[str]
-    email: Optional[str]
+    name: Optional[str] = None
+    email: Optional[str] = None
     phone_number: str
-    upi_id: Optional[str]
-    wallet_balance: float
+    upi_id: Optional[str] = None
+    upi_holder_name: Optional[str] = None
+    bank_name: Optional[str] = None
+    wallet_balance: float = 0.0
+    total_deposited: Optional[float] = 0.0
+    total_withdrawn: Optional[float] = 0.0
+    total_commission_earned: Optional[float] = 0.0
     referral_code: str
+    is_upi_bound: Optional[bool] = False
+    is_active: Optional[bool] = True
     created_at: datetime
 
     class Config:

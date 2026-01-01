@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 from app.models import UserRegister, UserLogin, UserResponse, TokenResponse, UserProfile
-from app.db.database import get_db
+from app.db.database import get_db_context
 from app.db.models import User, TeamMember
 from app.core.security import get_current_user, create_access_token
 import bcrypt
@@ -38,7 +38,7 @@ def get_unique_referral_code(db) -> str:
 @router.post("/register", response_model=UserResponse)
 def register(user: UserRegister):
     """Register a new user with phone number, password, and optional referral code."""
-    with get_db() as db:
+    with get_db_context() as db:
         password_hash = hash_password(user.password)
         referral_code = get_unique_referral_code(db)
 
@@ -101,7 +101,7 @@ def register(user: UserRegister):
 @router.post("/login", response_model=TokenResponse)
 def login(user: UserLogin):
     """Login with phone number and password. Returns JWT token."""
-    with get_db() as db:
+    with get_db_context() as db:
         db_user = db.query(User).filter_by(phone_number=user.phone_number).first()
 
         if not db_user:

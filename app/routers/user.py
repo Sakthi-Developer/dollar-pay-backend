@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from typing import List
 from app.models import UpdateProfile, BindUPI, UserProfile
-from app.db.database import get_db
+from app.db.database import get_db_context
 from app.db.models import User
 from app.core.security import get_current_user
 
@@ -20,7 +20,7 @@ def update_user_details(
     update_data: UpdateProfile, current_user: dict = Depends(get_current_user)
 ):
     """Update user details like name and email."""
-    with get_db() as db:
+    with get_db_context() as db:
         user = db.query(User).filter_by(id=current_user["id"]).first()
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
@@ -49,7 +49,7 @@ def bind_upi(
     upi_data: BindUPI, current_user: dict = Depends(get_current_user)
 ):
     """Bind UPI ID to the user's account."""
-    with get_db() as db:
+    with get_db_context() as db:
         user = db.query(User).filter_by(id=current_user["id"]).first()
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
@@ -91,7 +91,7 @@ def get_all_users(
     current_user: dict = Depends(get_current_user)
 ):
     """Get all users with pagination."""
-    with get_db() as db:
+    with get_db_context() as db:
         total_users = db.query(User).count()
         users_db = (
             db.query(User)

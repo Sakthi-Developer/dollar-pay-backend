@@ -1,14 +1,25 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from app.db.models import Base
+from sqlalchemy.orm import sessionmaker, Session
+from app.db.models import Base, User
 from app.core.config import settings
+from contextlib import contextmanager
 
 engine = create_engine(settings.database_url, echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def get_db():
-    """Get database session as a context manager."""
+    """Get database session for FastAPI dependency injection."""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+@contextmanager
+def get_db_context():
+    """Get database session as a context manager for direct usage."""
     db = SessionLocal()
     try:
         yield db
@@ -24,7 +35,7 @@ def init_db():
 class Database:
     @staticmethod
     def get_users(limit, offset):
-        with get_db() as db:
+        with get_db_context() as db:
             users = db.query(User).order_by(User.id).offset(offset).limit(limit).all()
             return [
                 {
@@ -42,12 +53,12 @@ class Database:
 
     @staticmethod
     def get_user_by_id(user_id: int):
-        with get_db() as db:
+        with get_db_context() as db:
             return db.query(User).filter_by(id=user_id).first()
 
     @staticmethod
     def save_user(user):
-        with get_db() as db:
+        with get_db_context() as db:
             db.add(user)
             db.commit()
             db.refresh(user)

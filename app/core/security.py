@@ -4,7 +4,8 @@ import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.core.config import settings
-from app.db.database import get_db
+from app.db.database import get_db_context
+from app.db.models import User
 
 security = HTTPBearer()
 
@@ -45,11 +46,8 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
             detail="Invalid token payload",
         )
 
-    with get_db() as conn:
-        user = conn.execute(
-            "SELECT * FROM users WHERE id = %s AND is_active = TRUE AND is_blocked = FALSE",
-            (user_id,)
-        ).fetchone()
+    with get_db_context() as db:
+        user = db.query(User).filter_by(id=int(user_id), is_active=True, is_blocked=False).first()
 
     if user is None:
         raise HTTPException(
@@ -57,4 +55,20 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
             detail="User not found or inactive",
         )
 
-    return user
+    return {
+        "id": user.id,
+        "phone_number": user.phone_number,
+        "referral_code": user.referral_code,
+        "name": user.name,
+        "email": user.email,
+        "wallet_balance": float(user.wallet_balance),
+        "total_deposited": float(user.total_deposited),
+        "total_withdrawn": float(user.total_withdrawn),
+        "total_commission_earned": float(user.total_commission_earned),
+        "upi_id": user.upi_id,
+        "upi_holder_name": user.upi_holder_name,
+        "bank_name": user.bank_name,
+        "is_upi_bound": user.is_upi_bound,
+        "is_active": user.is_active,
+        "created_at": user.created_at
+    }
