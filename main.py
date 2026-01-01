@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core import settings
-from app.db import init_db
+from app.db.database import init_db
 from app.routers import auth_router, user
 
 

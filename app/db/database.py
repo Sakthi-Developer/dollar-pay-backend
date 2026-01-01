@@ -1,26 +1,57 @@
-import psycopg
-from psycopg.rows import dict_row
-from contextlib import contextmanager
-from pathlib import Path
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from app.db.models import Base
 from app.core.config import settings
 
+engine = create_engine(settings.database_url, echo=False)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-@contextmanager
+
 def get_db():
-    """Get database connection as a context manager."""
-    conn = psycopg.connect(settings.database_url, row_factory=dict_row)
+    """Get database session as a context manager."""
+    db = SessionLocal()
     try:
-        yield conn
+        yield db
     finally:
-        conn.close()
+        db.close()
 
 
 def init_db():
-    """Initialize database tables from schema.sql."""
-    schema_path = Path(__file__).parent / "schema.sql"
-    with open(schema_path, "r") as f:
-        schema_sql = f.read()
+    """Initialize database tables."""
+    Base.metadata.create_all(bind=engine)
 
-    with get_db() as conn:
-        conn.execute(schema_sql)
-        conn.commit()
+
+class Database:
+    @staticmethod
+    def get_users(limit, offset):
+        with get_db() as db:
+            users = db.query(User).order_by(User.id).offset(offset).limit(limit).all()
+            return [
+                {
+                    'id': user.id,
+                    'name': user.name,
+                    'email': user.email,
+                    'phone_number': user.phone_number,
+                    'upi_id': user.upi_id,
+                    'wallet_balance': float(user.wallet_balance),
+                    'referral_code': user.referral_code,
+                    'created_at': user.created_at
+                }
+                for user in users
+            ]
+
+    @staticmethod
+    def get_user_by_id(user_id: int):
+        with get_db() as db:
+            return db.query(User).filter_by(id=user_id).first()
+
+    @staticmethod
+    def save_user(user):
+        with get_db() as db:
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            return user
+
+
+db = Database()

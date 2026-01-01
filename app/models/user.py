@@ -1,5 +1,5 @@
 from pydantic import BaseModel, field_validator, EmailStr
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from decimal import Decimal
 import re
@@ -32,19 +32,12 @@ class UserLogin(BaseModel):
 
 class UserProfile(BaseModel):
     id: int
+    name: Optional[str]
+    email: Optional[str]
     phone_number: str
+    upi_id: Optional[str]
+    wallet_balance: float
     referral_code: str
-    name: Optional[str] = None
-    email: Optional[str] = None
-    wallet_balance: Decimal = Decimal("0.00")
-    total_deposited: Decimal = Decimal("0.00")
-    total_withdrawn: Decimal = Decimal("0.00")
-    total_commission_earned: Decimal = Decimal("0.00")
-    upi_id: Optional[str] = None
-    upi_holder_name: Optional[str] = None
-    bank_name: Optional[str] = None
-    is_upi_bound: bool = False
-    is_active: bool = True
     created_at: datetime
 
     class Config:
