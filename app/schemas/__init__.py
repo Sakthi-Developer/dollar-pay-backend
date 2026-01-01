@@ -1,4 +1,4 @@
-from app.models.user import (
+from app.schemas.user import (
     UserRegister,
     UserLogin,
     UserProfile,
@@ -10,7 +10,7 @@ from app.models.user import (
     AdminResponse,
     AdminLogin,
 )
-from app.models.transaction import (
+from app.schemas.transaction import (
     TransactionType,
     TransactionStatus,
     DepositCreate,
@@ -18,7 +18,7 @@ from app.models.transaction import (
     TransactionResponse,
     TransactionDetail,
 )
-from app.models.commission import CommissionStatus, CommissionResponse
-from app.models.team import TeamMember, TeamStats
-from app.models.notification import NotificationType, NotificationResponse
-from app.models.settings import PlatformSettings
+from app.schemas.commission import CommissionStatus, CommissionResponse
+from app.schemas.team import TeamMember, TeamStats
+from app.schemas.notification import NotificationType, NotificationResponse
+from app.schemas.settings import PlatformSettings
