@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
-from app.schemas.user import UserRegister, UserLogin, UserResponse, TokenResponse, AdminRegister, AdminResponse, AdminLogin
+from app.schemas.user import UserRegister, UserLogin, UserResponse, TokenResponse, AdminRegister, AdminResponse, AdminLogin, AdminTokenResponse
 from app.services.auth_service import auth_service
 from app.core.security import get_current_user, get_current_super_admin
 
@@ -40,7 +40,7 @@ def register_admin(
         message="Admin registered successfully"
     )
 
-@router.post("/admin/login", response_model=TokenResponse)
+@router.post("/admin/login", response_model=AdminTokenResponse)
 def login_admin(admin: AdminLogin, db: Session = Depends(get_db)):
     """Login admin and return JWT token."""
     return auth_service.login_admin(db, admin)

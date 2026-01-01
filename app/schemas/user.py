@@ -112,6 +112,18 @@ class AdminLogin(BaseModel):
     password: str
 
 
+class AdminProfile(BaseModel):
+    id: int
+    username: str
+    email: str
+    role: str
+    is_active: Optional[bool] = True
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
 class AdminResponse(BaseModel):
     id: int
     username: str
@@ -120,6 +132,12 @@ class AdminResponse(BaseModel):
     is_active: Optional[bool] = True
     created_at: Optional[datetime] = None
     message: str
+
+
+class AdminTokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    admin: AdminProfile
 
 
 class TeamMemberSchema(BaseModel):

@@ -92,6 +92,8 @@ class AuthService:
 
     @classmethod
     def login_user(cls, db: Session, login_data: UserLogin) -> dict:
+        from app.schemas.user import UserProfile
+        
         user = db.query(User).filter_by(phone_number=login_data.phone_number).first()
         if not user or not cls.verify_password(login_data.password, user.password_hash):
             raise HTTPException(status_code=401, detail="Invalid phone number or password")
@@ -103,7 +105,32 @@ class AuthService:
             raise HTTPException(status_code=400, detail="Account is blocked")
 
         access_token = create_access_token(data={"sub": str(user.id), "role": "user"})
-        return {"access_token": access_token, "token_type": "bearer"}
+        
+        user_profile = UserProfile(
+            id=user.id,
+            name=user.name,
+            email=user.email,
+            phone_number=user.phone_number,
+            upi_id=user.upi_id,
+            upi_holder_name=user.upi_holder_name,
+            bank_name=user.bank_name,
+            wallet_balance=float(user.wallet_balance),
+            total_deposited=float(user.total_deposited),
+            total_withdrawn=float(user.total_withdrawn),
+            total_commission_earned=float(user.total_commission_earned),
+            team_size=0,  # Will be calculated if needed
+            total_commission=0.0,  # Will be calculated if needed
+            referral_code=user.referral_code,
+            is_upi_bound=user.is_upi_bound,
+            is_active=user.is_active,
+            created_at=user.created_at
+        )
+        
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": user_profile
+        }
 
     @classmethod
     def register_admin(cls, db: Session, admin_data: AdminRegister) -> Admin:
@@ -115,7 +142,7 @@ class AuthService:
                 email=admin_data.email,
                 password_hash=password_hash,
                 role=admin_data.role,
-                permissions=admin_data.permissions
+                permissions=None
             )
             db.add(new_admin)
             db.commit()
@@ -127,6 +154,8 @@ class AuthService:
 
     @classmethod
     def login_admin(cls, db: Session, login_data: AdminLogin) -> dict:
+        from app.schemas.user import AdminProfile
+        
         admin = db.query(Admin).filter_by(username=login_data.username).first()
         if not admin or not cls.verify_password(login_data.password, admin.password_hash):
             raise HTTPException(status_code=401, detail="Invalid username or password")
@@ -135,6 +164,20 @@ class AuthService:
             raise HTTPException(status_code=400, detail="Account is inactive")
 
         access_token = create_access_token(data={"sub": str(admin.id), "role": admin.role})
-        return {"access_token": access_token, "token_type": "bearer"}
+        
+        admin_profile = AdminProfile(
+            id=admin.id,
+            username=admin.username,
+            email=admin.email,
+            role=admin.role,
+            is_active=admin.is_active,
+            created_at=admin.created_at
+        )
+        
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "admin": admin_profile
+        }
 
 auth_service = AuthService()
