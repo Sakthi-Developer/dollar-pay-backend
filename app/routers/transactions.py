@@ -51,8 +51,10 @@ def create_withdrawal_request(
 
 @router.post("/transactions/upi-payout", response_model=TransactionResponse)
 def create_upi_payout_request(
-    upi_payout: UPIPayoutCreate = Form(...),
+    upi_amount: Decimal = Form(...),
     screenshot_url: str = Form(...),
+    payment_reference: Optional[str] = Form(None),
+    user_notes: Optional[str] = Form(None),
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -60,10 +62,10 @@ def create_upi_payout_request(
     return transaction_service.create_upi_payout(
         db=db,
         user_id=current_user['id'],
-        upi_amount=upi_payout.upi_amount,
+        upi_amount=upi_amount,
         screenshot_url=screenshot_url,
-        payment_reference=upi_payout.payment_reference,
-        user_notes=upi_payout.user_notes
+        payment_reference=payment_reference,
+        user_notes=user_notes
     )
 
 @router.get("/transactions/my-transactions", response_model=List[TransactionResponse])
