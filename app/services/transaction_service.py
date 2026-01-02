@@ -65,8 +65,7 @@ class TransactionService:
             gross_inr_amount=gross_inr,
             net_inr_amount=net_inr,
             user_upi_id=user.upi_id,
-            user_bank_name=user.bank_name,
-            created_at=datetime.utcnow()
+            user_bank_name=user.bank_name
         )
         
         db.add(transaction)
@@ -119,8 +118,7 @@ class TransactionService:
             gross_inr_amount=amount,
             net_inr_amount=amount,  # Will be updated if fees apply
             user_upi_id=user.upi_id,
-            user_bank_name=user.bank_name,
-            created_at=datetime.utcnow()
+            user_bank_name=user.bank_name
         )
         
         db.add(transaction)
