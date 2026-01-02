@@ -90,6 +90,7 @@ class TransactionResponse(BaseModel):
     net_inr_amount: Optional[Decimal] = None
     platform_fee_amount: Optional[Decimal] = None
     bonus_amount: Optional[Decimal] = None
+    screenshot_url: Optional[str] = None
     created_at: Optional[datetime] = None
 
     class Config:

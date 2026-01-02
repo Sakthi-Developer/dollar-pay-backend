@@ -99,11 +99,11 @@ class TransactionService:
         # Get platform settings
         platform_settings = settings_service.get_platform_settings(db)
         
-        # Validate amount limits (using INR limits for UPI payouts)
-        if upi_amount < platform_settings.min_deposit_inr:
-            raise HTTPException(status_code=400, detail=f"Minimum UPI payout is {platform_settings.min_deposit_inr} INR")
-        if upi_amount > platform_settings.max_deposit_inr:
-            raise HTTPException(status_code=400, detail=f"Maximum UPI payout is {platform_settings.max_deposit_inr} INR")
+        # Validate amount limits (using withdrawal limits for UPI payouts)
+        if upi_amount < platform_settings.min_withdrawal_inr:
+            raise HTTPException(status_code=400, detail=f"Minimum UPI payout is {platform_settings.min_withdrawal_inr} INR")
+        if upi_amount > platform_settings.max_withdrawal_inr:
+            raise HTTPException(status_code=400, detail=f"Maximum UPI payout is {platform_settings.max_withdrawal_inr} INR")
         
         # Get user's UPI details
         user = db.query(User).filter_by(id=user_id).first()
