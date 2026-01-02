@@ -3,7 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional, List
 from sqlalchemy.orm import Session
-from fastapi import UploadFile, HTTPException
+from fastapi import HTTPException
 
 from app.models.transaction import Transaction
 from app.models.user import User
@@ -19,18 +19,10 @@ class TransactionService:
         user_id: int,
         crypto_network: str,
         crypto_amount: Decimal,
-        screenshot: UploadFile,
+        screenshot_url: str,
         crypto_tx_hash: Optional[str] = None,
         user_notes: Optional[str] = None
     ) -> Transaction:
-        # Validate file type
-        if not screenshot.content_type.startswith('image/'):
-            raise HTTPException(status_code=400, detail="File must be an image")
-        
-        # Generate unique filename
-        file_extension = screenshot.filename.split('.')[-1] if '.' in screenshot.filename else 'jpg'
-        filename = f"screenshots/{user_id}/{uuid.uuid4()}.{file_extension}"
-        
         # Get platform settings
         platform_settings = settings_service.get_platform_settings(db)
         
@@ -40,9 +32,7 @@ class TransactionService:
         if crypto_amount > platform_settings.max_deposit_usdt:
             raise HTTPException(status_code=400, detail=f"Maximum deposit is {platform_settings.max_deposit_usdt} USDT")
         
-        # Upload screenshot to S3
-        screenshot_url = StorageService.upload_to_s3(screenshot, filename)
-        
+        # Use provided screenshot URL
         # Calculate amounts
         exchange_rate = platform_settings.usdt_to_inr_rate
         gross_inr = crypto_amount * exchange_rate

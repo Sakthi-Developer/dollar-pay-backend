@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, Depends, Form, HTTPException
 from typing import List, Optional
 from decimal import Decimal
 from sqlalchemy.orm import Session
@@ -21,17 +21,17 @@ def create_deposit_transaction(
     crypto_amount: Decimal = Form(...),
     crypto_tx_hash: Optional[str] = Form(None),
     user_notes: Optional[str] = Form(None),
-    screenshot: UploadFile = File(...),
+    screenshot_url: str = Form(...),
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Create a deposit transaction with screenshot upload."""
+    """Create a deposit transaction with screenshot URL."""
     return transaction_service.create_deposit(
         db=db,
         user_id=current_user['id'],
         crypto_network=crypto_network,
         crypto_amount=crypto_amount,
-        screenshot=screenshot,
+        screenshot=screenshot_url,
         crypto_tx_hash=crypto_tx_hash,
         user_notes=user_notes
     )
