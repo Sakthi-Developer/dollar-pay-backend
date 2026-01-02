@@ -3,9 +3,10 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
-from app.schemas.user import UserProfile, TeamMemberSchema, CommissionSchema, BindUPI
+from app.schemas.user import UserProfile, TeamMemberSchema, CommissionSchema, BindUPI, PaginatedUserResponse
 from app.services.user_service import user_service
-from app.core.security import get_current_user
+from app.core.security import get_current_user, get_current_admin
+from app.models.user import User
 
 router = APIRouter()
 
@@ -41,3 +42,33 @@ def bind_upi(
 ):
     """Bind UPI details to user account."""
     return user_service.bind_upi(db, current_user['id'], upi_data)
+
+# Admin endpoints
+
+@router.get("/admin/users", response_model=PaginatedUserResponse)
+def get_all_users(
+    page: int = 1,
+    limit: int = 20,
+    search: str = None,
+    current_admin: dict = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Get all users with pagination for admin."""
+    query = db.query(User)
+    if search:
+        query = query.filter(
+            (User.username.ilike(f"%{search}%")) |
+            (User.email.ilike(f"%{search}%")) |
+            (User.phone.ilike(f"%{search}%"))
+        )
+
+    total = query.count()
+    users = query.order_by(User.created_at.desc()).offset((page - 1) * limit).limit(limit).all()
+
+    return PaginatedUserResponse(
+        users=[UserProfile.from_orm(u) for u in users],
+        total=total,
+        page=page,
+        limit=limit,
+        total_pages=(total + limit - 1) // limit
+    )

@@ -7,8 +7,8 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.db.database import get_db_context
-from app.db.models import Admin
-from app.routers.auth import hash_password
+from app.models.admin import Admin
+from app.services.auth_service import AuthService
 
 def create_super_admin():
     """Create initial super admin user."""
@@ -27,7 +27,7 @@ def create_super_admin():
             print("Admin already exists. Use the registration endpoint for new admins.")
             return
         
-        password_hash = hash_password(password)
+        password_hash = AuthService.hash_password(password)
         
         super_admin = Admin(
             username=username,

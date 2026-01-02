@@ -153,3 +153,11 @@ class CommissionSchema(BaseModel):
     from_user_id: int
     level: int
     created_at: datetime
+
+
+class PaginatedUserResponse(BaseModel):
+    users: List[UserProfile]
+    total: int
+    page: int
+    limit: int
+    total_pages: int

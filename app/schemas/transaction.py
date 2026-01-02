@@ -1,5 +1,5 @@
 from pydantic import BaseModel, field_validator
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
@@ -55,18 +55,30 @@ class WithdrawalCreate(BaseModel):
         return v
 
 
+class TransactionUserInfo(BaseModel):
+    id: int
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone_number: str
+    referral_code: str
+
+    class Config:
+        from_attributes = True
+
+
 class TransactionResponse(BaseModel):
     id: int
     transaction_uid: str
     type: TransactionType
     status: TransactionStatus
+    user: TransactionUserInfo
     crypto_network: Optional[str] = None
     crypto_amount: Optional[Decimal] = None
     gross_inr_amount: Optional[Decimal] = None
     net_inr_amount: Optional[Decimal] = None
     platform_fee_amount: Optional[Decimal] = None
     bonus_amount: Optional[Decimal] = None
-    created_at: datetime
+    created_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
@@ -83,7 +95,7 @@ class TransactionDetail(TransactionResponse):
     payment_reference: Optional[str] = None
     admin_reviewed_at: Optional[datetime] = None
     payment_completed_at: Optional[datetime] = None
-    updated_at: datetime
+    updated_at: Optional[datetime] = None
 
 
 class AdminTransactionApproval(BaseModel):
@@ -93,3 +105,11 @@ class AdminTransactionApproval(BaseModel):
     payment_reference: Optional[str] = None  # UTR for UPI payout
     transaction_fee: Optional[Decimal] = None  # Bank transaction fee
     platform_fee: Optional[Decimal] = None  # Platform fee for payout
+
+
+class PaginatedTransactionResponse(BaseModel):
+    transactions: List[TransactionResponse]
+    total: int
+    page: int
+    limit: int
+    total_pages: int

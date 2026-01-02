@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.core.security import get_current_user, get_current_admin
-from app.schemas.transaction import TransactionResponse, TransactionDetail, WithdrawalCreate, AdminTransactionApproval
+from app.schemas.transaction import TransactionResponse, TransactionDetail, WithdrawalCreate, AdminTransactionApproval, PaginatedTransactionResponse, TransactionUserInfo
 from app.schemas.settings import SettingUpdate
 from app.services.transaction_service import transaction_service
 from app.models.transaction import Transaction
@@ -58,7 +58,18 @@ def get_user_transactions(
 ):
     """Get user's transactions."""
     transactions = db.query(Transaction).filter_by(user_id=current_user['id']).order_by(Transaction.created_at.desc()).limit(limit).offset(offset).all()
-    return [TransactionResponse.from_orm(t) for t in transactions]
+
+    # Create response objects with user data (current user)
+    user = db.query(User).filter_by(id=current_user['id']).first()
+    user_data = TransactionUserInfo.from_orm(user)
+
+    transaction_responses = []
+    for transaction in transactions:
+        transaction_dict = TransactionResponse.from_orm(transaction).dict()
+        transaction_dict['user'] = user_data.dict()
+        transaction_responses.append(TransactionResponse(**transaction_dict))
+
+    return transaction_responses
 
 @router.get("/balance", response_model=dict)
 def get_user_balance(
@@ -84,7 +95,13 @@ def get_transaction_detail(
     transaction = db.query(Transaction).filter_by(id=transaction_id, user_id=current_user['id']).first()
     if not transaction:
         raise HTTPException(status_code=404, detail="Transaction not found")
-    return TransactionDetail.from_orm(transaction)
+
+    # Create response with user data (current user)
+    user = db.query(User).filter_by(id=current_user['id']).first()
+    user_data = TransactionUserInfo.from_orm(user)
+    transaction_dict = TransactionDetail.from_orm(transaction).dict()
+    transaction_dict['user'] = user_data.dict()
+    return TransactionDetail(**transaction_dict)
 
 # Admin endpoints
 
@@ -94,26 +111,54 @@ def get_pending_transactions(
     db: Session = Depends(get_db)
 ):
     """Get all pending transactions for admin review."""
-    transactions = db.query(Transaction).filter_by(status='pending').order_by(Transaction.created_at.desc()).all()
-    return [TransactionResponse.from_orm(t) for t in transactions]
+    transactions = db.query(Transaction).join(User, Transaction.user_id == User.id).filter(Transaction.status == 'pending').order_by(Transaction.created_at.desc()).all()
 
-@router.get("/admin/transactions", response_model=List[TransactionResponse])
+    # Create response objects with user data
+    transaction_responses = []
+    for transaction in transactions:
+        user_data = TransactionUserInfo.from_orm(transaction.user)
+        transaction_dict = TransactionResponse.from_orm(transaction).dict()
+        transaction_dict['user'] = user_data.dict()
+        transaction_responses.append(TransactionResponse(**transaction_dict))
+
+    return transaction_responses
+
+@router.get("/admin/transactions", response_model=PaginatedTransactionResponse)
 def get_all_transactions(
     status: Optional[str] = None,
     type: Optional[str] = None,
+    page: int = 1,
     limit: int = 20,
-    offset: int = 0,
     current_admin: dict = Depends(get_current_admin),
     db: Session = Depends(get_db)
 ):
-    """Get all transactions for admin review."""
-    query = db.query(Transaction)
+    """Get all transactions for admin review with pagination."""
+    query = db.query(Transaction).join(User, Transaction.user_id == User.id)
     if status:
-        query = query.filter_by(status=status)
+        query = query.filter(Transaction.status == status)
     if type:
-        query = query.filter_by(type=type)
-    transactions = query.order_by(Transaction.created_at.desc()).limit(limit).offset(offset).all()
-    return [TransactionResponse.from_orm(t) for t in transactions]
+        query = query.filter(Transaction.type == type)
+
+    total = query.count()
+    transactions = query.order_by(Transaction.created_at.desc()).offset((page - 1) * limit).limit(limit).all()
+
+    # Create response objects with user data
+    transaction_responses = []
+    for transaction in transactions:
+        # Get user data
+        user_data = TransactionUserInfo.from_orm(transaction.user)
+        # Create transaction response with user
+        transaction_dict = TransactionResponse.from_orm(transaction).dict()
+        transaction_dict['user'] = user_data.dict()
+        transaction_responses.append(TransactionResponse(**transaction_dict))
+
+    return PaginatedTransactionResponse(
+        transactions=transaction_responses,
+        total=total,
+        page=page,
+        limit=limit,
+        total_pages=(total + limit - 1) // limit
+    )
 
 @router.get("/admin/transactions/{transaction_id}", response_model=TransactionDetail)
 def get_admin_transaction_detail(
@@ -122,10 +167,15 @@ def get_admin_transaction_detail(
     db: Session = Depends(get_db)
 ):
     """Get transaction details for admin."""
-    transaction = db.query(Transaction).filter_by(id=transaction_id).first()
+    transaction = db.query(Transaction).join(User, Transaction.user_id == User.id).filter(Transaction.id == transaction_id).first()
     if not transaction:
         raise HTTPException(status_code=404, detail="Transaction not found")
-    return TransactionDetail.from_orm(transaction)
+
+    # Create response with user data
+    user_data = TransactionUserInfo.from_orm(transaction.user)
+    transaction_dict = TransactionDetail.from_orm(transaction).dict()
+    transaction_dict['user'] = user_data.dict()
+    return TransactionDetail(**transaction_dict)
 
 @router.put("/admin/transactions/{transaction_id}/review", response_model=dict)
 def review_transaction(

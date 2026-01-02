@@ -25,11 +25,11 @@ app.add_middleware(
 )
 
 # Include API routers
-app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
-app.include_router(user.router, prefix="/api/v1/user", tags=["User"])
-app.include_router(transactions.router, prefix="/api/v1/transactions", tags=["Transactions"])
-app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["Dashboard"])
-app.include_router(notifications.router, tags=["Notifications"])
+app.include_router(auth, prefix="/api/v1/auth", tags=["Authentication"])
+app.include_router(user, prefix="/api/v1/user", tags=["User"])
+app.include_router(transactions, prefix="/api/v1/transactions", tags=["Transactions"])
+app.include_router(dashboard, prefix="/api/v1/dashboard", tags=["Dashboard"])
+app.include_router(notifications, tags=["Notifications"])
 
 @app.get("/")
 def root():
