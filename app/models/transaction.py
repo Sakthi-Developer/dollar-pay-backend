@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, DECIMAL, Text, BigInteger, ForeignKey, CheckConstraint
+from sqlalchemy import Column, String, DateTime, DECIMAL, Text, BigInteger, ForeignKey, CheckConstraint, text
 from sqlalchemy.orm import relationship
 from app.models.base import Base
 
@@ -38,8 +38,8 @@ class Transaction(Base):
     payment_reference = Column(String(100))
     payment_completed_at = Column(DateTime, nullable=True)
 
-    created_at = Column(DateTime, default='CURRENT_TIMESTAMP')
-    updated_at = Column(DateTime, default='CURRENT_TIMESTAMP')
+    created_at = Column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+    updated_at = Column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
 
     # Relationships
     user = relationship("User", back_populates="transactions")

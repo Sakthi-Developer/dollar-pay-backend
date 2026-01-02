@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, Text, BigInteger, ForeignKey, JSON
+from sqlalchemy import Column, String, DateTime, Text, BigInteger, ForeignKey, JSON, text
 from sqlalchemy.orm import relationship
 from app.models.base import Base
 
@@ -18,7 +18,7 @@ class ActivityLog(Base):
     user_agent = Column(Text)
     log_metadata = Column(JSON)
 
-    created_at = Column(DateTime, default='CURRENT_TIMESTAMP')
+    created_at = Column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
 
     # Relationships
     user = relationship("User", back_populates="activity_logs")

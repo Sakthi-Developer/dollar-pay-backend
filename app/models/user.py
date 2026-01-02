@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, DateTime, DECIMAL, BigInteger, ForeignKey
+from sqlalchemy import Column, String, Boolean, DateTime, DECIMAL, BigInteger, ForeignKey, text
 from sqlalchemy.orm import relationship
 from app.models.base import Base
 
@@ -33,8 +33,8 @@ class User(Base):
     is_blocked = Column(Boolean, default=False)
 
     # Timestamps
-    created_at = Column(DateTime, default='CURRENT_TIMESTAMP')
-    updated_at = Column(DateTime, default='CURRENT_TIMESTAMP')
+    created_at = Column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+    updated_at = Column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
     last_login_at = Column(DateTime, nullable=True)
 
     # Relationships

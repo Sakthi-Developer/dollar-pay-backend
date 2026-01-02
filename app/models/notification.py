@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, DateTime, Text, BigInteger, ForeignKey, CheckConstraint
+from sqlalchemy import Column, String, Boolean, DateTime, Text, BigInteger, ForeignKey, CheckConstraint, text
 from sqlalchemy.orm import relationship
 from app.models.base import Base
 
@@ -17,7 +17,7 @@ class Notification(Base):
 
     related_transaction_id = Column(BigInteger, ForeignKey('transactions.id'), nullable=True)
 
-    created_at = Column(DateTime, default='CURRENT_TIMESTAMP')
+    created_at = Column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
 
     # Relationships
     user = relationship("User", back_populates="notifications")

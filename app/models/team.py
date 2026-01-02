@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, DateTime, BigInteger, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, Integer, DateTime, BigInteger, ForeignKey, UniqueConstraint, text
 from sqlalchemy.orm import relationship
 from app.models.base import Base
 
@@ -10,7 +10,7 @@ class TeamMember(Base):
     child_user_id = Column(BigInteger, ForeignKey('users.id'), nullable=False)
     level = Column(Integer, default=1)
 
-    created_at = Column(DateTime, default='CURRENT_TIMESTAMP')
+    created_at = Column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
 
     # Relationships
     parent = relationship("User", foreign_keys=[parent_user_id], back_populates="team_members")

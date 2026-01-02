@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, DECIMAL, BigInteger, ForeignKey, CheckConstraint
+from sqlalchemy import Column, String, DateTime, DECIMAL, BigInteger, ForeignKey, CheckConstraint, text
 from sqlalchemy.orm import relationship
 from app.models.base import Base
 
@@ -17,8 +17,8 @@ class Commission(Base):
     status = Column(String(20), default='pending')
     credited_at = Column(DateTime, nullable=True)
 
-    created_at = Column(DateTime, default='CURRENT_TIMESTAMP')
-    updated_at = Column(DateTime, default='CURRENT_TIMESTAMP')
+    created_at = Column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+    updated_at = Column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
 
     # Relationships
     referrer = relationship("User", foreign_keys=[referrer_user_id], back_populates="commissions_earned")

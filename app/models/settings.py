@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text, BigInteger, ForeignKey, CheckConstraint
+from sqlalchemy import Column, Integer, String, DateTime, Text, BigInteger, ForeignKey, CheckConstraint, text
 from sqlalchemy.orm import relationship
 from app.models.base import Base
 
@@ -12,7 +12,7 @@ class PlatformSetting(Base):
     description = Column(Text)
 
     updated_by_admin_id = Column(BigInteger, ForeignKey('admins.id'))
-    updated_at = Column(DateTime, default='CURRENT_TIMESTAMP')
+    updated_at = Column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
 
     # Relationships
     updated_by = relationship("Admin", back_populates="settings_updated")
