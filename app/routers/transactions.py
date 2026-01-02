@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.core.security import get_current_user, get_current_admin
-from app.schemas.transaction import TransactionResponse, TransactionDetail, WithdrawalCreate, AdminTransactionApproval, PaginatedTransactionResponse, TransactionUserInfo
+from app.schemas.transaction import TransactionResponse, TransactionDetail, WithdrawalCreate, AdminTransactionApproval, PaginatedTransactionResponse, TransactionUserInfo, UPIPayoutCreate
 from app.schemas.settings import SettingUpdate
 from app.services.transaction_service import transaction_service
 from app.models.transaction import Transaction
@@ -47,6 +47,23 @@ def create_withdrawal_request(
         db=db,
         user_id=current_user['id'],
         amount=withdrawal.amount
+    )
+
+@router.post("/transactions/upi-payout", response_model=TransactionResponse)
+def create_upi_payout_request(
+    upi_payout: UPIPayoutCreate = Form(...),
+    screenshot_url: str = Form(...),
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Create a UPI payout request with screenshot proof."""
+    return transaction_service.create_upi_payout(
+        db=db,
+        user_id=current_user['id'],
+        upi_amount=upi_payout.upi_amount,
+        screenshot_url=screenshot_url,
+        payment_reference=upi_payout.payment_reference,
+        user_notes=upi_payout.user_notes
     )
 
 @router.get("/transactions/my-transactions", response_model=List[TransactionResponse])
