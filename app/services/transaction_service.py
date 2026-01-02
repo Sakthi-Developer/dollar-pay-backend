@@ -65,7 +65,8 @@ class TransactionService:
             gross_inr_amount=gross_inr,
             net_inr_amount=net_inr,
             user_upi_id=user.upi_id,
-            user_bank_name=user.bank_name
+            user_bank_name=user.bank_name,
+            created_at=datetime.utcnow()
         )
         
         db.add(transaction)
@@ -118,7 +119,8 @@ class TransactionService:
             gross_inr_amount=amount,
             net_inr_amount=amount,  # Will be updated if fees apply
             user_upi_id=user.upi_id,
-            user_bank_name=user.bank_name
+            user_bank_name=user.bank_name,
+            created_at=datetime.utcnow()
         )
         
         db.add(transaction)
@@ -186,7 +188,8 @@ class TransactionService:
                     user_bank_name=transaction.user_bank_name,
                     payment_reference=payment_reference,
                     admin_id=admin_id,
-                    payment_completed_at=datetime.utcnow()
+                    payment_completed_at=datetime.utcnow(),
+                    created_at=datetime.utcnow()
                 )
                 db.add(payout_transaction)
             elif transaction.type == 'withdrawal':

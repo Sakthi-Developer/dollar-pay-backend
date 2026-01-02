@@ -4,7 +4,7 @@ from app.models.user import User
 from app.models.team import TeamMember
 from app.models.commission import Commission
 from app.models.transaction import Transaction
-from app.schemas.user import UserProfile, TeamMemberSchema, CommissionSchema
+from app.schemas.user import UserProfile, TeamMemberSchema, CommissionSchema, BindUPI
 
 class UserService:
     def get_user_profile(self, db: Session, user_id: int) -> UserProfile:
@@ -69,5 +69,23 @@ class UserService:
                 created_at=c.created_at
             ) for c in commissions
         ]
+
+    def bind_upi(self, db: Session, user_id: int, upi_data: BindUPI) -> UserProfile:
+        """Bind UPI details to user account."""
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Update UPI details
+        user.upi_id = upi_data.upi_id
+        user.upi_holder_name = upi_data.upi_holder_name
+        user.bank_name = upi_data.bank_name
+        user.is_upi_bound = True
+        
+        db.commit()
+        db.refresh(user)
+        
+        # Return updated profile
+        return self.get_user_profile(db, user_id)
 
 user_service = UserService()

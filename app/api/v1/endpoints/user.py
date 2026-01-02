@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
-from app.schemas.user import UserProfile, TeamMemberSchema, CommissionSchema
+from app.schemas.user import UserProfile, TeamMemberSchema, CommissionSchema, BindUPI
 from app.services.user_service import user_service
 from app.core.security import get_current_user
 
@@ -32,3 +32,12 @@ def get_commissions(
 ):
     """Get history of commissions earned."""
     return user_service.get_commissions(db, current_user['id'])
+
+@router.put("/bind-upi", response_model=UserProfile)
+def bind_upi(
+    upi_data: BindUPI,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Bind UPI details to user account."""
+    return user_service.bind_upi(db, current_user['id'], upi_data)
