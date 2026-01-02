@@ -42,7 +42,12 @@ class NotificationService:
     @classmethod
     def broadcast_to_admins_sync(cls, message: Dict[str, Any]):
         """Broadcast notification to admins synchronously."""
-        asyncio.create_task(cls.broadcast_to_admins(message))
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(cls.broadcast_to_admins(message))
+        except RuntimeError:
+            # No running event loop, notifications will be skipped
+            pass
 
     @classmethod
     async def broadcast_to_user(cls, user_id: int, message: Dict[str, Any]):
@@ -58,6 +63,11 @@ class NotificationService:
     @classmethod
     def broadcast_to_user_sync(cls, user_id: int, message: Dict[str, Any]):
         """Broadcast notification to user synchronously."""
-        asyncio.create_task(cls.broadcast_to_user(user_id, message))
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(cls.broadcast_to_user(user_id, message))
+        except RuntimeError:
+            # No running event loop, notifications will be skipped
+            pass
 
 notification_service = NotificationService()

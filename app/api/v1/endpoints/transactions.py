@@ -31,7 +31,7 @@ def create_deposit_transaction(
         user_id=current_user['id'],
         crypto_network=crypto_network,
         crypto_amount=crypto_amount,
-        screenshot=screenshot_url,
+        screenshot_url=screenshot_url,
         crypto_tx_hash=crypto_tx_hash,
         user_notes=user_notes
     )

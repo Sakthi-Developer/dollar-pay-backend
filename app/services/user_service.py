@@ -12,47 +12,60 @@ class UserService:
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         
-        # Calculate total team size
-        team_size = db.query(TeamMember).filter(TeamMember.referrer_id == user_id).count()
+        # Calculate total team size (users where this user is the parent)
+        team_size = db.query(TeamMember).filter(TeamMember.parent_user_id == user_id).count()
         
-        # Calculate total commission
+        # Calculate total commission (commissions where this user is the referrer)
         total_commission = 0
-        commissions = db.query(Commission).filter(Commission.to_user_id == user_id).all()
+        commissions = db.query(Commission).filter(Commission.referrer_user_id == user_id).all()
         for comm in commissions:
-            total_commission += comm.amount
+            total_commission += float(comm.commission_amount)
 
         return UserProfile(
             id=user.id,
+            name=user.name,
+            email=user.email,
             phone_number=user.phone_number,
+            upi_id=user.upi_id,
+            upi_holder_name=user.upi_holder_name,
+            bank_name=user.bank_name,
+            wallet_balance=float(user.wallet_balance),
+            total_deposited=float(user.total_deposited),
+            total_withdrawn=float(user.total_withdrawn),
+            total_commission_earned=float(user.total_commission_earned),
             referral_code=user.referral_code,
-            wallet_balance=user.wallet_balance,
             team_size=team_size,
             total_commission=total_commission,
-            is_active=user.is_active
+            is_upi_bound=user.is_upi_bound,
+            is_active=user.is_active,
+            created_at=user.created_at
         )
 
     def get_team_members(self, db: Session, user_id: int):
-        members = db.query(TeamMember).filter(TeamMember.referrer_id == user_id).all()
+        # Get team members where the current user is the parent
+        members = db.query(TeamMember).filter(TeamMember.parent_user_id == user_id).all()
         result = []
         for member in members:
-            user_details = db.query(User).filter(User.id == member.user_id).first()
+            # Get the child user details
+            user_details = db.query(User).filter(User.id == member.child_user_id).first()
             if user_details:
                 result.append(TeamMemberSchema(
                     user_id=user_details.id,
                     phone_number=user_details.phone_number,
-                    joined_at=member.joined_at,
+                    joined_at=member.created_at,
                     level=member.level
                 ))
         return result
 
     def get_commissions(self, db: Session, user_id: int):
-        commissions = db.query(Commission).filter(Commission.to_user_id == user_id).order_by(Commission.created_at.desc()).all()
+        # Get commissions where this user is the referrer (earned the commission)
+        commissions = db.query(Commission).filter(Commission.referrer_user_id == user_id).order_by(Commission.created_at.desc()).all()
         return [
             CommissionSchema(
                 id=c.id,
-                amount=c.amount,
-                from_user_id=c.from_user_id,
-                level=c.level,
+                amount=float(c.commission_amount),
+                from_user_id=c.referred_user_id,
+                level=1,  # Level info not stored in commission, default to 1
                 created_at=c.created_at
             ) for c in commissions
         ]
