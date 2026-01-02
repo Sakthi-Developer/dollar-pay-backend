@@ -15,7 +15,7 @@ from datetime import datetime
 
 router = APIRouter()
 
-@router.post("/deposit", response_model=TransactionResponse)
+@router.post("/transactions/deposit", response_model=TransactionResponse)
 def create_deposit_transaction(
     crypto_network: str = Form(...),
     crypto_amount: Decimal = Form(...),
@@ -36,7 +36,7 @@ def create_deposit_transaction(
         user_notes=user_notes
     )
 
-@router.post("/withdrawal", response_model=TransactionResponse)
+@router.post("/transactions/withdrawal", response_model=TransactionResponse)
 def create_withdrawal_request(
     withdrawal: WithdrawalCreate,
     current_user: dict = Depends(get_current_user),
@@ -49,7 +49,7 @@ def create_withdrawal_request(
         amount=withdrawal.amount
     )
 
-@router.get("/my-transactions", response_model=List[TransactionResponse])
+@router.get("/transactions/my-transactions", response_model=List[TransactionResponse])
 def get_user_transactions(
     limit: int = 20,
     offset: int = 0,
@@ -71,7 +71,7 @@ def get_user_transactions(
 
     return transaction_responses
 
-@router.get("/balance", response_model=dict)
+@router.get("/transactions/balance", response_model=dict)
 def get_user_balance(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -85,7 +85,7 @@ def get_user_balance(
         "total_commission_earned": user.total_commission_earned
     }
 
-@router.get("/{transaction_id}", response_model=TransactionDetail)
+@router.get("/transactions/{transaction_id}", response_model=TransactionDetail)
 def get_transaction_detail(
     transaction_id: int,
     current_user: dict = Depends(get_current_user),
@@ -105,7 +105,7 @@ def get_transaction_detail(
 
 # Admin endpoints
 
-@router.get("/admin/pending", response_model=List[TransactionResponse])
+@router.get("/admin/transactions/pending", response_model=List[TransactionResponse])
 def get_pending_transactions(
     current_admin: dict = Depends(get_current_admin),
     db: Session = Depends(get_db)

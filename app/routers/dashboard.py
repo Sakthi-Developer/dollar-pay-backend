@@ -22,7 +22,7 @@ async def websocket_notifications(websocket: WebSocket):
     except WebSocketDisconnect:
         notification_service.disconnect(websocket)
 
-@router.get("/stats")
+@router.get("/dashboard/stats")
 def get_dashboard_stats(
     current_admin: dict = Depends(get_current_admin),
     db: Session = Depends(get_db)
@@ -71,7 +71,7 @@ def get_dashboard_stats(
         }
     }
 
-@router.get("/transactions-chart")
+@router.get("/dashboard/transactions-chart")
 def get_transactions_chart(
     days: int = 30,
     current_admin: dict = Depends(get_current_admin),
@@ -120,7 +120,7 @@ def get_transactions_chart(
         ]
     }
 
-@router.get("/users-chart")
+@router.get("/dashboard/users-chart")
 def get_users_chart(
     days: int = 30,
     current_admin: dict = Depends(get_current_admin),
@@ -156,7 +156,7 @@ def get_users_chart(
         "cumulative_users": cumulative_users
     }
 
-@router.get("/revenue-chart")
+@router.get("/dashboard/revenue-chart")
 def get_revenue_chart(
     days: int = 30,
     current_admin: dict = Depends(get_current_admin),
@@ -183,7 +183,7 @@ def get_revenue_chart(
         ]
     }
 
-@router.get("/recent-activity")
+@router.get("/dashboard/recent-activity")
 def get_recent_activity(
     limit: int = 10,
     current_admin: dict = Depends(get_current_admin),

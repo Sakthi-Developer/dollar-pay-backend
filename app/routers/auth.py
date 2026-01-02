@@ -8,7 +8,7 @@ from app.core.security import get_current_user, get_current_super_admin
 
 router = APIRouter()
 
-@router.post("/register", response_model=UserResponse)
+@router.post("/auth/register", response_model=UserResponse)
 def register(user: UserRegister, db: Session = Depends(get_db)):
     """Register a new user with phone number, password, and optional referral code."""
     new_user = auth_service.register_user(db, user)
@@ -19,12 +19,12 @@ def register(user: UserRegister, db: Session = Depends(get_db)):
         message="User registered successfully"
     )
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/auth/login", response_model=TokenResponse)
 def login(user: UserLogin, db: Session = Depends(get_db)):
     """Login user and return JWT token."""
     return auth_service.login_user(db, user)
 
-@router.post("/admin/register", response_model=AdminResponse)
+@router.post("/auth/admin/register", response_model=AdminResponse)
 def register_admin(
     admin: AdminRegister, 
     current_admin: dict = Depends(get_current_super_admin),
@@ -40,7 +40,7 @@ def register_admin(
         message="Admin registered successfully"
     )
 
-@router.post("/admin/login", response_model=AdminTokenResponse)
+@router.post("/auth/admin/login", response_model=AdminTokenResponse)
 def login_admin(admin: AdminLogin, db: Session = Depends(get_db)):
     """Login admin and return JWT token."""
     return auth_service.login_admin(db, admin)

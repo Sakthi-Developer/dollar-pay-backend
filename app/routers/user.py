@@ -10,7 +10,7 @@ from app.models.user import User
 
 router = APIRouter()
 
-@router.get("/profile", response_model=UserProfile)
+@router.get("/user/profile", response_model=UserProfile)
 def get_profile(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -18,7 +18,7 @@ def get_profile(
     """Get current user profile with wallet balance and team stats."""
     return user_service.get_user_profile(db, current_user['id'])
 
-@router.get("/team", response_model=List[TeamMemberSchema])
+@router.get("/user/team", response_model=List[TeamMemberSchema])
 def get_team(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -26,7 +26,7 @@ def get_team(
     """Get list of team members referred by the current user."""
     return user_service.get_team_members(db, current_user['id'])
 
-@router.get("/commissions", response_model=List[CommissionSchema])
+@router.get("/user/commissions", response_model=List[CommissionSchema])
 def get_commissions(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -34,7 +34,7 @@ def get_commissions(
     """Get history of commissions earned."""
     return user_service.get_commissions(db, current_user['id'])
 
-@router.put("/bind-upi", response_model=UserProfile)
+@router.put("/user/bind-upi", response_model=UserProfile)
 def bind_upi(
     upi_data: BindUPI,
     current_user: dict = Depends(get_current_user),
