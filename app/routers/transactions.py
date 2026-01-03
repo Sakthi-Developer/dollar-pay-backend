@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.core.security import get_current_user, get_current_admin
-from app.schemas.transaction import TransactionResponse, TransactionDetail, WithdrawalCreate, AdminTransactionApproval, PaginatedTransactionResponse, TransactionUserInfo, UPIPayoutCreate, AdminUPIPayoutCreate
+from app.schemas.transaction import TransactionResponse, TransactionDetail, WithdrawalCreate, AdminTransactionApproval, PaginatedTransactionResponse, TransactionUserInfo, UPIPayoutCreate, AdminUPIPayoutCreate, TransactionStatus
 from app.schemas.settings import SettingUpdate
 from app.services.transaction_service import transaction_service
 from app.models.transaction import Transaction
@@ -228,7 +228,7 @@ def approve_transaction(
         db=db,
         transaction_id=transaction_id,
         admin_id=current_admin['id'],
-        status="approved"
+        status=TransactionStatus.APPROVED
     )
     return {"message": "Transaction approved successfully"}
 
