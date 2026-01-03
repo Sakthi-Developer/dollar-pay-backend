@@ -209,6 +209,71 @@ class TransactionService:
         return transaction
 
     @staticmethod
+    def create_admin_upi_payout(
+        db: Session,
+        user_id: int,
+        upi_amount: Decimal,
+        screenshot_url: str,
+        payment_reference: Optional[str] = None,
+        user_notes: Optional[str] = None,
+        admin_notes: Optional[str] = None
+    ) -> Transaction:
+        # Get platform settings
+        platform_settings = settings_service.get_platform_settings(db)
+        
+        # Validate amount limits (using withdrawal limits for UPI payouts)
+        if upi_amount < platform_settings.min_withdrawal_inr:
+            raise HTTPException(status_code=400, detail=f"Minimum UPI payout is {platform_settings.min_withdrawal_inr} INR")
+        if upi_amount > platform_settings.max_withdrawal_inr:
+            raise HTTPException(status_code=400, detail=f"Maximum UPI payout is {platform_settings.max_withdrawal_inr} INR")
+        
+        # Get user's UPI details
+        user = db.query(User).filter_by(id=user_id).first()
+        if not user or not user.is_upi_bound:
+            raise HTTPException(status_code=400, detail="UPI details not bound")
+        
+        # Calculate amounts
+        gross_inr = upi_amount
+        platform_fee = gross_inr * (platform_settings.platform_fee_percent / 100)
+        bonus = gross_inr * (platform_settings.bonus_percent / 100)
+        net_inr = gross_inr - platform_fee + bonus
+        
+        # Create UPI payout transaction as completed
+        transaction_uid = f"UPI{uuid.uuid4().hex[:8].upper()}"
+        transaction = Transaction(
+            transaction_uid=transaction_uid,
+            user_id=user_id,
+            type='upi_payout',
+            status='completed',
+            screenshot_url=screenshot_url,
+            user_notes=user_notes,
+            admin_notes=admin_notes,
+            exchange_rate=Decimal('1.0'),
+            platform_fee_percent=platform_settings.platform_fee_percent,
+            platform_fee_amount=platform_fee,
+            bonus_percent=platform_settings.bonus_percent,
+            bonus_amount=bonus,
+            gross_inr_amount=gross_inr,
+            net_inr_amount=net_inr,
+            user_upi_id=user.upi_id,
+            user_bank_name=user.bank_name,
+            payment_reference=payment_reference,
+            payment_completed_at=datetime.utcnow(),
+            created_at=datetime.utcnow()
+        )
+        
+        db.add(transaction)
+        
+        # Credit user balance
+        user.wallet_balance += net_inr
+        user.total_deposited += net_inr  # Assuming payouts are treated as deposits for balance
+        
+        db.commit()
+        db.refresh(transaction)
+        
+        return transaction
+
+    @staticmethod
     def review_transaction(
         db: Session,
         transaction_id: int,

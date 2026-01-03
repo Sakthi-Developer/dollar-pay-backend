@@ -67,6 +67,21 @@ class UPIPayoutCreate(BaseModel):
             raise ValueError("Amount must be greater than 0")
         return v
 
+class AdminUPIPayoutCreate(BaseModel):
+    user_phone: str
+    upi_amount: Decimal
+    screenshot_url: str
+    payment_reference: Optional[str] = None
+    user_notes: Optional[str] = None
+    admin_notes: Optional[str] = None
+
+    @field_validator("upi_amount")
+    @classmethod
+    def validate_amount(cls, v):
+        if v <= 0:
+            raise ValueError("Amount must be greater than 0")
+        return v
+
 class TransactionUserInfo(BaseModel):
     id: int
     name: Optional[str] = None
