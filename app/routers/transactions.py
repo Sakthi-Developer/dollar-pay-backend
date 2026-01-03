@@ -217,6 +217,21 @@ def review_transaction(
     )
     return {"message": "Transaction reviewed successfully"}
 
+@router.put("/admin/transactions/{transaction_id}/approve", response_model=dict)
+def approve_transaction(
+    transaction_id: int,
+    current_admin: dict = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Admin approve transaction."""
+    transaction_service.review_transaction(
+        db=db,
+        transaction_id=transaction_id,
+        admin_id=current_admin['id'],
+        status="approved"
+    )
+    return {"message": "Transaction approved successfully"}
+
 @router.get("/admin/settings", response_model=List[dict])
 def get_all_platform_settings(
     current_admin: dict = Depends(get_current_admin),
