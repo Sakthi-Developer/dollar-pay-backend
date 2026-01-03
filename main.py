@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.db.database import init_db
-from app.routers import auth, user, transactions, dashboard, notifications
+from app.routers import auth, user, transactions, dashboard, notifications, storage
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -34,6 +34,10 @@ app.include_router(notifications, tags=["Notifications"])
 @app.get("/")
 def root():
     return {"message": "Dollar Pay API is running"}
+
+@app.get("/storage/upload")
+def storage_upload():
+    return {"url": "https://public.bnbstatic.com/image/cms/article/body/202206/f9f2f9ebb1a4caf7e477a7613788ccb8.png"}
 
 @app.get("/health")
 def health_check():

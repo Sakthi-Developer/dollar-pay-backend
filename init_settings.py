@@ -3,7 +3,7 @@
 Script to initialize platform settings in the database.
 """
 from app.db.database import get_db_context
-from app.db.models import PlatformSetting
+from app.models.settings import PlatformSetting
 
 def init_platform_settings():
     """Initialize default platform settings."""
