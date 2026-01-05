@@ -196,6 +196,35 @@ def get_admin_transaction_detail(
     transaction_dict['user'] = user_data.dict()
     return TransactionDetail(**transaction_dict)
 
+@router.get("/admin/transactions/search-by-mobile", response_model=PaginatedTransactionResponse)
+def search_transactions_by_mobile(
+    mobile_number: str,
+    page: int = 1,
+    limit: int = 20,
+    current_admin: dict = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Search transactions by user's mobile number with pagination."""
+    query = db.query(Transaction).join(User, Transaction.user_id == User.id).filter(User.phone_number == mobile_number)
+    total = query.count()
+    transactions = query.order_by(Transaction.created_at.desc()).offset((page - 1) * limit).limit(limit).all()
+
+    # Create response objects with user data
+    transaction_responses = []
+    for transaction in transactions:
+        user_data = TransactionUserInfo.from_orm(transaction.user)
+        transaction_dict = TransactionResponse.from_orm(transaction).dict()
+        transaction_dict['user'] = user_data.dict()
+        transaction_responses.append(TransactionResponse(**transaction_dict))
+
+    return PaginatedTransactionResponse(
+        transactions=transaction_responses,
+        total=total,
+        page=page,
+        limit=limit,
+        total_pages=(total + limit - 1) // limit
+    )
+
 @router.put("/admin/transactions/{transaction_id}/review", response_model=dict)
 def review_transaction(
     transaction_id: int,
