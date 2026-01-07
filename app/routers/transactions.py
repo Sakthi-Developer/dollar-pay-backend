@@ -114,13 +114,27 @@ def get_transaction_detail(
 
 # Admin endpoints
 
-@router.get("/admin/transactions/pending", response_model=List[TransactionResponse])
+@router.get("/admin/transactions/pending", response_model=PaginatedTransactionResponse)
 def get_pending_transactions(
+    page: int = 1,
+    limit: int = 20,
+    search: Optional[str] = None,
     current_admin: dict = Depends(get_current_admin),
     db: Session = Depends(get_db)
 ):
-    """Get all pending transactions for admin review."""
-    transactions = db.query(Transaction).join(User, Transaction.user_id == User.id).filter(Transaction.status == 'pending').order_by(Transaction.created_at.desc()).all()
+    """Get all pending transactions for admin review with pagination and search."""
+    query = db.query(Transaction).join(User, Transaction.user_id == User.id).filter(Transaction.status == 'pending')
+
+    # Add search filter if provided
+    if search:
+        query = query.filter(
+            (User.phone_number.ilike(f"%{search}%")) |
+            (User.name.ilike(f"%{search}%")) |
+            (Transaction.transaction_uid.ilike(f"%{search}%"))
+        )
+
+    total = query.count()
+    transactions = query.order_by(Transaction.created_at.desc()).offset((page - 1) * limit).limit(limit).all()
 
     # Create response objects with user data
     transaction_responses = []
@@ -130,7 +144,13 @@ def get_pending_transactions(
         transaction_dict['user'] = user_data.dict()
         transaction_responses.append(TransactionResponse(**transaction_dict))
 
-    return transaction_responses
+    return PaginatedTransactionResponse(
+        transactions=transaction_responses,
+        total=total,
+        page=page,
+        limit=limit,
+        total_pages=(total + limit - 1) // limit
+    )
 
 @router.get("/admin/transactions", response_model=PaginatedTransactionResponse)
 def get_all_transactions(
