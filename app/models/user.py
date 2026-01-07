@@ -29,6 +29,12 @@ class User(Base):
     bank_name = Column(String(100))
     is_upi_bound = Column(Boolean, default=False)
 
+    # Bank Account Details (IMPS)
+    account_number = Column(String(50))
+    ifsc_code = Column(String(20))
+    account_holder_name = Column(String(100))
+    is_bank_bound = Column(Boolean, default=False)
+
     # Status
     is_active = Column(Boolean, default=True)
     is_blocked = Column(Boolean, default=False)

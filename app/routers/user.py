@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
-from app.schemas.user import UserProfile, TeamMemberSchema, CommissionSchema, BindUPI, PaginatedUserResponse
+from app.schemas.user import UserProfile, TeamMemberSchema, CommissionSchema, BindUPI, BindBankAccount, PaginatedUserResponse
 from app.services.user_service import user_service
 from app.core.security import get_current_user, get_current_admin
 from app.models.user import User
@@ -42,6 +42,15 @@ def bind_upi(
 ):
     """Bind UPI details to user account."""
     return user_service.bind_upi(db, current_user['id'], upi_data)
+
+@router.put("/user/bind-bank-account", response_model=UserProfile)
+def bind_bank_account(
+    bank_data: BindBankAccount,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Bind bank account details (IMPS) to user account."""
+    return user_service.bind_bank_account(db, current_user['id'], bank_data)
 
 # Admin endpoints
 

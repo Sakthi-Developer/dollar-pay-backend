@@ -4,7 +4,7 @@ from app.models.user import User
 from app.models.team import TeamMember
 from app.models.commission import Commission
 from app.models.transaction import Transaction
-from app.schemas.user import UserProfile, TeamMemberSchema, CommissionSchema, BindUPI
+from app.schemas.user import UserProfile, TeamMemberSchema, CommissionSchema, BindUPI, BindBankAccount
 
 class UserService:
     def get_user_profile(self, db: Session, user_id: int) -> UserProfile:
@@ -29,14 +29,19 @@ class UserService:
             upi_id=user.upi_id,
             upi_holder_name=user.upi_holder_name,
             bank_name=user.bank_name,
+            is_upi_bound=user.is_upi_bound,
+            account_number=user.account_number,
+            ifsc_code=user.ifsc_code,
+            account_holder_name=user.account_holder_name,
+            is_bank_bound=user.is_bank_bound,
             wallet_balance=float(user.wallet_balance),
             total_deposited=float(user.total_deposited),
             total_withdrawn=float(user.total_withdrawn),
             total_commission_earned=float(user.total_commission_earned),
+            total_usd_sent=float(user.total_usd_sent or 0),
             referral_code=user.referral_code,
             team_size=team_size,
             total_commission=total_commission,
-            is_upi_bound=user.is_upi_bound,
             is_active=user.is_active,
             created_at=user.created_at
         )
@@ -71,20 +76,50 @@ class UserService:
         ]
 
     def bind_upi(self, db: Session, user_id: int, upi_data: BindUPI) -> UserProfile:
-        """Bind UPI details to user account."""
+        """Bind UPI details to user account and clear IMPS data."""
         user = db.query(User).filter(User.id == user_id).first()
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        
+
         # Update UPI details
         user.upi_id = upi_data.upi_id
         user.upi_holder_name = upi_data.upi_holder_name
         user.bank_name = upi_data.bank_name
         user.is_upi_bound = True
-        
+
+        # Clear IMPS/bank account data completely
+        user.account_number = None
+        user.ifsc_code = None
+        user.account_holder_name = None
+        user.is_bank_bound = False
+
         db.commit()
         db.refresh(user)
-        
+
+        # Return updated profile
+        return self.get_user_profile(db, user_id)
+
+    def bind_bank_account(self, db: Session, user_id: int, bank_data: BindBankAccount) -> UserProfile:
+        """Bind bank account details (IMPS) to user account and clear UPI data."""
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # Update bank account details
+        user.account_number = bank_data.account_number
+        user.ifsc_code = bank_data.ifsc_code
+        user.account_holder_name = bank_data.account_holder_name
+        user.bank_name = bank_data.bank_name
+        user.is_bank_bound = True
+
+        # Clear UPI data completely
+        user.upi_id = None
+        user.upi_holder_name = None
+        user.is_upi_bound = False
+
+        db.commit()
+        db.refresh(user)
+
         # Return updated profile
         return self.get_user_profile(db, user_id)
 

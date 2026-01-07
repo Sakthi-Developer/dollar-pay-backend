@@ -38,10 +38,12 @@ class TransactionService:
         bonus = gross_inr * (platform_settings.bonus_percent / 100)
         net_inr = gross_inr - platform_fee + bonus
         
-        # Get user's UPI details
+        # Get user's payment details
         user = db.query(User).filter_by(id=user_id).first()
-        if not user or not user.is_upi_bound:
-            raise HTTPException(status_code=400, detail="UPI details not bound")
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        if not user.is_upi_bound and not user.is_bank_bound:
+            raise HTTPException(status_code=400, detail="Payment details not set. Please bind UPI or bank account")
         
         # Create transaction
         transaction_uid = f"DEP{uuid.uuid4().hex[:8].upper()}"
@@ -108,8 +110,8 @@ class TransactionService:
         user = db.query(User).filter_by(phone_number=user_phone).first()
         if not user:
             raise HTTPException(status_code=404, detail="User not found with the provided phone number")
-        if not user.is_upi_bound:
-            raise HTTPException(status_code=400, detail="UPI details not bound")
+        if not user.is_upi_bound and not user.is_bank_bound:
+            raise HTTPException(status_code=400, detail="Payment details not set. Please bind UPI or bank account")
         
         # Calculate amounts
         gross_inr = upi_amount
@@ -182,10 +184,12 @@ class TransactionService:
         if upi_amount > platform_settings.max_withdrawal_inr:
             raise HTTPException(status_code=400, detail=f"Maximum UPI payout is {platform_settings.max_withdrawal_inr} INR")
         
-        # Get user's UPI details
+        # Get user's payment details
         user = db.query(User).filter_by(id=user_id).first()
-        if not user or not user.is_upi_bound:
-            raise HTTPException(status_code=400, detail="UPI details not bound")
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        if not user.is_upi_bound and not user.is_bank_bound:
+            raise HTTPException(status_code=400, detail="Payment details not set. Please bind UPI or bank account")
         
         # Calculate amounts
         gross_inr = upi_amount

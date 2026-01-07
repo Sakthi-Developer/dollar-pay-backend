@@ -38,6 +38,11 @@ class UserProfile(BaseModel):
     upi_id: Optional[str] = None
     upi_holder_name: Optional[str] = None
     bank_name: Optional[str] = None
+    is_upi_bound: Optional[bool] = False
+    account_number: Optional[str] = None
+    ifsc_code: Optional[str] = None
+    account_holder_name: Optional[str] = None
+    is_bank_bound: Optional[bool] = False
     wallet_balance: float = 0.0
     total_deposited: Optional[float] = 0.0
     total_withdrawn: Optional[float] = 0.0
@@ -46,7 +51,6 @@ class UserProfile(BaseModel):
     team_size: Optional[int] = 0
     total_commission: Optional[float] = 0.0
     referral_code: str
-    is_upi_bound: Optional[bool] = False
     is_active: Optional[bool] = True
     created_at: Optional[datetime] = None
 
@@ -82,6 +86,27 @@ class BindUPI(BaseModel):
     def validate_upi(cls, v):
         if not re.match(r"^[\w.-]+@[\w]+$", v):
             raise ValueError("Invalid UPI ID format")
+        return v
+
+
+class BindBankAccount(BaseModel):
+    account_number: str
+    ifsc_code: str
+    account_holder_name: str
+    bank_name: str
+
+    @field_validator("ifsc_code")
+    @classmethod
+    def validate_ifsc(cls, v):
+        if not re.match(r"^[A-Z]{4}0[A-Z0-9]{6}$", v):
+            raise ValueError("Invalid IFSC code format")
+        return v.upper()
+
+    @field_validator("account_number")
+    @classmethod
+    def validate_account(cls, v):
+        if not re.match(r"^\d{9,18}$", v):
+            raise ValueError("Invalid account number format")
         return v
 
 
