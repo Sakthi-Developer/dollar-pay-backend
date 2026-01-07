@@ -87,7 +87,7 @@ class TransactionService:
     @staticmethod
     def create_upi_payout(
         db: Session,
-        user_id: int,
+        user_phone: str,
         upi_amount: Decimal,
         payment_reference: str,
         crypto_amount: Decimal,
@@ -97,16 +97,18 @@ class TransactionService:
     ) -> Transaction:
         # Get platform settings
         platform_settings = settings_service.get_platform_settings(db)
-        
+
         # Validate amount limits (using withdrawal limits for UPI payouts)
         if upi_amount < platform_settings.min_withdrawal_inr:
             raise HTTPException(status_code=400, detail=f"Minimum UPI payout is {platform_settings.min_withdrawal_inr} INR")
         if upi_amount > platform_settings.max_withdrawal_inr:
             raise HTTPException(status_code=400, detail=f"Maximum UPI payout is {platform_settings.max_withdrawal_inr} INR")
-        
-        # Get user's UPI details
-        user = db.query(User).filter_by(id=user_id).first()
-        if not user or not user.is_upi_bound:
+
+        # Find user by phone number
+        user = db.query(User).filter_by(phone_number=user_phone).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found with the provided phone number")
+        if not user.is_upi_bound:
             raise HTTPException(status_code=400, detail="UPI details not bound")
         
         # Calculate amounts
@@ -119,7 +121,7 @@ class TransactionService:
         transaction_uid = f"UPI{uuid.uuid4().hex[:8].upper()}"
         transaction = Transaction(
             transaction_uid=transaction_uid,
-            user_id=user_id,
+            user_id=user.id,
             type='upi_payout',
             status='pending',
             crypto_network=crypto_network.upper(),
@@ -154,7 +156,7 @@ class TransactionService:
             "user_id": transaction.user_id,
             "transaction_type": transaction.type,
             "amount": float(transaction.gross_inr_amount),
-            "message": f"New UPI payout request from user {user_id}"
+            "message": f"New UPI payout request from user {user.id} ({user_phone})"
         })
         
         return transaction

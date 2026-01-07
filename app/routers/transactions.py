@@ -36,6 +36,7 @@ def create_deposit_transaction(
 
 @router.post("/transactions/upi-payout", response_model=TransactionResponse)
 def create_upi_payout_request(
+    user_phone: str = Form(...),
     upi_amount: Decimal = Form(...),
     payment_reference: str = Form(...),
     crypto_amount: Decimal = Form(...),
@@ -45,10 +46,10 @@ def create_upi_payout_request(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Create a UPI payout request with payment reference, crypto amount, and remaining crypto."""
+    """Create a UPI payout request for a user by phone number with payment reference, crypto amount, and remaining crypto."""
     return transaction_service.create_upi_payout(
         db=db,
-        user_id=current_user['id'],
+        user_phone=user_phone,
         upi_amount=upi_amount,
         payment_reference=payment_reference,
         crypto_amount=crypto_amount,

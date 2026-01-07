@@ -51,6 +51,7 @@ class DepositCreate(BaseModel):
 
 
 class UPIPayoutCreate(BaseModel):
+    user_phone: str
     upi_amount: Decimal
     payment_reference: str
     crypto_amount: Decimal
