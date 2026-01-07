@@ -169,23 +169,6 @@ def get_all_transactions(
         total_pages=(total + limit - 1) // limit
     )
 
-@router.get("/admin/transactions/{transaction_id}", response_model=TransactionDetail)
-def get_admin_transaction_detail(
-    transaction_id: int,
-    current_admin: dict = Depends(get_current_admin),
-    db: Session = Depends(get_db)
-):
-    """Get transaction details for admin."""
-    transaction = db.query(Transaction).join(User, Transaction.user_id == User.id).filter(Transaction.id == transaction_id).first()
-    if not transaction:
-        raise HTTPException(status_code=404, detail="Transaction not found")
-
-    # Create response with user data
-    user_data = TransactionUserInfo.from_orm(transaction.user)
-    transaction_dict = TransactionDetail.from_orm(transaction).dict()
-    transaction_dict['user'] = user_data.dict()
-    return TransactionDetail(**transaction_dict)
-
 @router.get("/admin/transactions/search-by-mobile", response_model=PaginatedTransactionResponse)
 def search_transactions_by_mobile(
     mobile_number: str,
@@ -214,6 +197,23 @@ def search_transactions_by_mobile(
         limit=limit,
         total_pages=(total + limit - 1) // limit
     )
+
+@router.get("/admin/transactions/{transaction_id}", response_model=TransactionDetail)
+def get_admin_transaction_detail(
+    transaction_id: int,
+    current_admin: dict = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Get transaction details for admin."""
+    transaction = db.query(Transaction).join(User, Transaction.user_id == User.id).filter(Transaction.id == transaction_id).first()
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+
+    # Create response with user data
+    user_data = TransactionUserInfo.from_orm(transaction.user)
+    transaction_dict = TransactionDetail.from_orm(transaction).dict()
+    transaction_dict['user'] = user_data.dict()
+    return TransactionDetail(**transaction_dict)
 
 @router.put("/admin/transactions/{transaction_id}/review", response_model=dict)
 def review_transaction(
