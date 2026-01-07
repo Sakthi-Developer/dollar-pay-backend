@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.core.security import get_current_user, get_current_admin
-from app.schemas.transaction import TransactionResponse, TransactionDetail, AdminTransactionApproval, PaginatedTransactionResponse, TransactionUserInfo, UPIPayoutCreate, AdminUPIPayoutCreate, TransactionStatus
+from app.schemas.transaction import TransactionResponse, TransactionDetail, AdminTransactionApproval, PaginatedTransactionResponse, TransactionUserInfo, UPIPayoutCreate, TransactionStatus
 from app.schemas.settings import SettingUpdate
 from app.services.transaction_service import transaction_service
 from app.models.transaction import Transaction
@@ -253,26 +253,33 @@ def approve_transaction(
 
 @router.post("/admin/transactions/upi-payout", response_model=TransactionResponse)
 def create_admin_upi_payout(
-    payout: AdminUPIPayoutCreate,
+    user_phone: str = Form(...),
+    upi_amount: Decimal = Form(...),
+    payment_reference: str = Form(...),
+    crypto_amount: Decimal = Form(...),
+    remaining_crypto: Decimal = Form(...),
+    crypto_network: str = Form(...),
+    user_notes: Optional[str] = Form(None),
+    admin_notes: Optional[str] = Form(None),
     current_admin: dict = Depends(get_current_admin),
     db: Session = Depends(get_db)
 ):
     """Admin create UPI payout transaction for a user."""
     # Find user by phone number
-    user = db.query(User).filter_by(phone_number=payout.user_phone).first()
+    user = db.query(User).filter_by(phone_number=user_phone).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found with the provided phone number")
-    
+
     return transaction_service.create_admin_upi_payout(
         db=db,
         user_id=user.id,
-        upi_amount=payout.upi_amount,
-        payment_reference=payout.payment_reference,
-        crypto_amount=payout.crypto_amount,
-        remaining_crypto=payout.remaining_crypto,
-        crypto_network=payout.crypto_network,
-        user_notes=payout.user_notes,
-        admin_notes=payout.admin_notes
+        upi_amount=upi_amount,
+        payment_reference=payment_reference,
+        crypto_amount=crypto_amount,
+        remaining_crypto=remaining_crypto,
+        crypto_network=crypto_network,
+        user_notes=user_notes,
+        admin_notes=admin_notes
     )
 
 @router.get("/admin/settings", response_model=List[dict])

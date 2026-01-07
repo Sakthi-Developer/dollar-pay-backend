@@ -54,6 +54,33 @@ def bind_bank_account(
 
 # Admin endpoints
 
+@router.get("/admin/users/search", response_model=PaginatedUserResponse)
+def search_users(
+    mobile_number: str,
+    page: int = 1,
+    limit: int = 20,
+    current_admin: dict = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Search users by mobile number."""
+    query = db.query(User).filter(User.phone_number.ilike(f"%{mobile_number}%"))
+
+    total = query.count()
+    users = query.order_by(User.created_at.desc()).offset((page - 1) * limit).limit(limit).all()
+
+    # Create UserProfile objects with team size and commission
+    user_profiles = []
+    for user in users:
+        user_profiles.append(user_service.get_user_profile(db, user.id))
+
+    return PaginatedUserResponse(
+        users=user_profiles,
+        total=total,
+        page=page,
+        limit=limit,
+        total_pages=(total + limit - 1) // limit
+    )
+
 @router.get("/admin/users", response_model=PaginatedUserResponse)
 def get_all_users(
     page: int = 1,
@@ -66,16 +93,21 @@ def get_all_users(
     query = db.query(User)
     if search:
         query = query.filter(
-            (User.username.ilike(f"%{search}%")) |
+            (User.name.ilike(f"%{search}%")) |
             (User.email.ilike(f"%{search}%")) |
-            (User.phone.ilike(f"%{search}%"))
+            (User.phone_number.ilike(f"%{search}%"))
         )
 
     total = query.count()
     users = query.order_by(User.created_at.desc()).offset((page - 1) * limit).limit(limit).all()
 
+    # Create UserProfile objects with team size and commission
+    user_profiles = []
+    for user in users:
+        user_profiles.append(user_service.get_user_profile(db, user.id))
+
     return PaginatedUserResponse(
-        users=[UserProfile.from_orm(u) for u in users],
+        users=user_profiles,
         total=total,
         page=page,
         limit=limit,
