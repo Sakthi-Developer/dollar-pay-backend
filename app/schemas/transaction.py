@@ -24,8 +24,7 @@ class TransactionStatus(str, Enum):
 class DepositCreate(BaseModel):
     crypto_network: str
     crypto_amount: Decimal
-    crypto_tx_hash: Optional[str] = None
-    screenshot_url: Optional[str] = None
+    crypto_tx_hash: str
     user_notes: Optional[str] = None
 
     @field_validator("crypto_network")
@@ -43,21 +42,20 @@ class DepositCreate(BaseModel):
             raise ValueError("Amount must be greater than 0")
         return v
 
-
-class WithdrawalCreate(BaseModel):
-    amount: Decimal
-
-    @field_validator("amount")
+    @field_validator("crypto_tx_hash")
     @classmethod
-    def validate_amount(cls, v):
-        if v <= 0:
-            raise ValueError("Amount must be greater than 0")
-        return v
+    def validate_tx_hash(cls, v):
+        if not v or not v.strip():
+            raise ValueError("Transaction hash is required and cannot be empty")
+        return v.strip()
+
 
 class UPIPayoutCreate(BaseModel):
     upi_amount: Decimal
-    screenshot_url: str
-    payment_reference: Optional[str] = None
+    payment_reference: str
+    crypto_amount: Decimal
+    remaining_crypto: Decimal
+    crypto_network: str
     user_notes: Optional[str] = None
 
     @field_validator("upi_amount")
@@ -67,11 +65,42 @@ class UPIPayoutCreate(BaseModel):
             raise ValueError("Amount must be greater than 0")
         return v
 
+    @field_validator("crypto_amount")
+    @classmethod
+    def validate_crypto_amount(cls, v):
+        if v <= 0:
+            raise ValueError("Crypto amount must be greater than 0")
+        return v
+
+    @field_validator("remaining_crypto")
+    @classmethod
+    def validate_remaining_crypto(cls, v):
+        if v < 0:
+            raise ValueError("Remaining crypto cannot be negative")
+        return v
+
+    @field_validator("crypto_network")
+    @classmethod
+    def validate_network(cls, v):
+        allowed = ["TRC20", "ERC20", "BEP20"]
+        if v.upper() not in allowed:
+            raise ValueError(f"Network must be one of: {', '.join(allowed)}")
+        return v.upper()
+
+    @field_validator("payment_reference")
+    @classmethod
+    def validate_reference(cls, v):
+        if not v or not v.strip():
+            raise ValueError("Payment reference is required and cannot be empty")
+        return v.strip()
+
 class AdminUPIPayoutCreate(BaseModel):
     user_phone: str
     upi_amount: Decimal
-    screenshot_url: str
-    payment_reference: Optional[str] = None
+    payment_reference: str
+    crypto_amount: Decimal
+    remaining_crypto: Decimal
+    crypto_network: str
     user_notes: Optional[str] = None
     admin_notes: Optional[str] = None
 
@@ -81,6 +110,35 @@ class AdminUPIPayoutCreate(BaseModel):
         if v <= 0:
             raise ValueError("Amount must be greater than 0")
         return v
+
+    @field_validator("crypto_amount")
+    @classmethod
+    def validate_crypto_amount(cls, v):
+        if v <= 0:
+            raise ValueError("Crypto amount must be greater than 0")
+        return v
+
+    @field_validator("remaining_crypto")
+    @classmethod
+    def validate_remaining_crypto(cls, v):
+        if v < 0:
+            raise ValueError("Remaining crypto cannot be negative")
+        return v
+
+    @field_validator("crypto_network")
+    @classmethod
+    def validate_network(cls, v):
+        allowed = ["TRC20", "ERC20", "BEP20"]
+        if v.upper() not in allowed:
+            raise ValueError(f"Network must be one of: {', '.join(allowed)}")
+        return v.upper()
+
+    @field_validator("payment_reference")
+    @classmethod
+    def validate_reference(cls, v):
+        if not v or not v.strip():
+            raise ValueError("Payment reference is required and cannot be empty")
+        return v.strip()
 
 class TransactionUserInfo(BaseModel):
     id: int
@@ -101,11 +159,12 @@ class TransactionResponse(BaseModel):
     user: TransactionUserInfo
     crypto_network: Optional[str] = None
     crypto_amount: Optional[Decimal] = None
+    remaining_crypto: Optional[Decimal] = None
     gross_inr_amount: Optional[Decimal] = None
     net_inr_amount: Optional[Decimal] = None
     platform_fee_amount: Optional[Decimal] = None
     bonus_amount: Optional[Decimal] = None
-    screenshot_url: Optional[str] = None
+    payment_reference: Optional[str] = None
     created_at: Optional[datetime] = None
 
     class Config:
@@ -115,12 +174,10 @@ class TransactionResponse(BaseModel):
 class TransactionDetail(TransactionResponse):
     crypto_wallet_address: Optional[str] = None
     crypto_tx_hash: Optional[str] = None
-    screenshot_url: Optional[str] = None
     user_notes: Optional[str] = None
     exchange_rate: Optional[Decimal] = None
     user_upi_id: Optional[str] = None
     rejection_reason: Optional[str] = None
-    payment_reference: Optional[str] = None
     admin_reviewed_at: Optional[datetime] = None
     payment_completed_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None

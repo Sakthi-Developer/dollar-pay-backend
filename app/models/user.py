@@ -21,6 +21,7 @@ class User(Base):
     total_deposited = Column(DECIMAL(15, 2), default=0.00)
     total_withdrawn = Column(DECIMAL(15, 2), default=0.00)
     total_commission_earned = Column(DECIMAL(15, 2), default=0.00)
+    total_usd_sent = Column(DECIMAL(15, 2), default=0.00)
 
     # UPI Details
     upi_id = Column(String(100))

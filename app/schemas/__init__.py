@@ -16,7 +16,6 @@ from app.schemas.transaction import (
     TransactionType,
     TransactionStatus,
     DepositCreate,
-    WithdrawalCreate,
     TransactionResponse,
     TransactionDetail,
 )

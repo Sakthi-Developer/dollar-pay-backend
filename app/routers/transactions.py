@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.core.security import get_current_user, get_current_admin
-from app.schemas.transaction import TransactionResponse, TransactionDetail, WithdrawalCreate, AdminTransactionApproval, PaginatedTransactionResponse, TransactionUserInfo, UPIPayoutCreate, AdminUPIPayoutCreate, TransactionStatus
+from app.schemas.transaction import TransactionResponse, TransactionDetail, AdminTransactionApproval, PaginatedTransactionResponse, TransactionUserInfo, UPIPayoutCreate, AdminUPIPayoutCreate, TransactionStatus
 from app.schemas.settings import SettingUpdate
 from app.services.transaction_service import transaction_service
 from app.models.transaction import Transaction
@@ -19,52 +19,41 @@ router = APIRouter()
 def create_deposit_transaction(
     crypto_network: str = Form(...),
     crypto_amount: Decimal = Form(...),
-    crypto_tx_hash: Optional[str] = Form(None),
+    crypto_tx_hash: str = Form(...),
     user_notes: Optional[str] = Form(None),
-    screenshot_url: str = Form(...),
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Create a deposit transaction with screenshot URL."""
+    """Create a deposit transaction with crypto transaction hash."""
     return transaction_service.create_deposit(
         db=db,
         user_id=current_user['id'],
         crypto_network=crypto_network,
         crypto_amount=crypto_amount,
-        screenshot_url=screenshot_url,
         crypto_tx_hash=crypto_tx_hash,
         user_notes=user_notes
-    )
-
-@router.post("/transactions/withdrawal", response_model=TransactionResponse)
-def create_withdrawal_request(
-    withdrawal: WithdrawalCreate,
-    current_user: dict = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Create a withdrawal request."""
-    return transaction_service.create_withdrawal(
-        db=db,
-        user_id=current_user['id'],
-        amount=withdrawal.amount
     )
 
 @router.post("/transactions/upi-payout", response_model=TransactionResponse)
 def create_upi_payout_request(
     upi_amount: Decimal = Form(...),
-    screenshot_url: str = Form(...),
-    payment_reference: Optional[str] = Form(None),
+    payment_reference: str = Form(...),
+    crypto_amount: Decimal = Form(...),
+    remaining_crypto: Decimal = Form(...),
+    crypto_network: str = Form(...),
     user_notes: Optional[str] = Form(None),
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Create a UPI payout request with screenshot proof."""
+    """Create a UPI payout request with payment reference, crypto amount, and remaining crypto."""
     return transaction_service.create_upi_payout(
         db=db,
         user_id=current_user['id'],
         upi_amount=upi_amount,
-        screenshot_url=screenshot_url,
         payment_reference=payment_reference,
+        crypto_amount=crypto_amount,
+        remaining_crypto=remaining_crypto,
+        crypto_network=crypto_network,
         user_notes=user_notes
     )
 
@@ -277,8 +266,10 @@ def create_admin_upi_payout(
         db=db,
         user_id=user.id,
         upi_amount=payout.upi_amount,
-        screenshot_url=payout.screenshot_url,
         payment_reference=payout.payment_reference,
+        crypto_amount=payout.crypto_amount,
+        remaining_crypto=payout.remaining_crypto,
+        crypto_network=payout.crypto_network,
         user_notes=payout.user_notes,
         admin_notes=payout.admin_notes
     )

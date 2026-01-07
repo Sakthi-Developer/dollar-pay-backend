@@ -42,6 +42,7 @@ class UserProfile(BaseModel):
     total_deposited: Optional[float] = 0.0
     total_withdrawn: Optional[float] = 0.0
     total_commission_earned: Optional[float] = 0.0
+    total_usd_sent: Optional[float] = 0.0
     team_size: Optional[int] = 0
     total_commission: Optional[float] = 0.0
     referral_code: str

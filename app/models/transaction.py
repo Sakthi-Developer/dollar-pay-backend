@@ -14,6 +14,7 @@ class Transaction(Base):
     crypto_network = Column(String(20))
     crypto_wallet_address = Column(String(100))
     crypto_amount = Column(DECIMAL(15, 6))
+    remaining_crypto = Column(DECIMAL(15, 6))
     crypto_tx_hash = Column(String(100))
 
     screenshot_url = Column(String(500))
