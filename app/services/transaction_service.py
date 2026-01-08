@@ -264,31 +264,11 @@ class TransactionService:
         if status == TransactionStatus.REJECTED:
             transaction.rejection_reason = rejection_reason
         elif status == TransactionStatus.APPROVED:
-            # For crypto_deposit, create UPI payout transaction
             if transaction.type == 'crypto_deposit':
                 # Update user balance
                 user = transaction.user
                 user.total_deposited += transaction.net_inr_amount
                 user.wallet_balance += transaction.net_inr_amount
-                
-                # Create UPI payout transaction
-                payout_uid = f"PAY{uuid.uuid4().hex[:8].upper()}"
-                payout_transaction = Transaction(
-                    transaction_uid=payout_uid,
-                    user_id=transaction.user_id,
-                    type='upi_payout',
-                    status='completed',
-                    gross_inr_amount=transaction.net_inr_amount,
-                    net_inr_amount=transaction.net_inr_amount - (transaction_fee or 0) - (platform_fee or 0),
-                    platform_fee_amount=transaction_fee or 0,  # Use platform_fee_amount for transaction fee
-                    user_upi_id=transaction.user_upi_id,
-                    user_bank_name=transaction.user_bank_name,
-                    payment_reference=payment_reference,
-                    admin_id=admin_id,
-                    payment_completed_at=datetime.utcnow(),
-                    created_at=datetime.utcnow()
-                )
-                db.add(payout_transaction)
             elif transaction.type == 'withdrawal':
                 # For withdrawal, debit user balance
                 user = transaction.user
