@@ -68,10 +68,13 @@ class TransactionService:
             created_at=datetime.utcnow()
         )
         
+        # Update user's total_usd_sent when crypto deposit is created
+        user.total_usd_sent = (user.total_usd_sent or Decimal('0.00')) + crypto_amount
+
         db.add(transaction)
         db.commit()
         db.refresh(transaction)
-        
+
         # Notify admin
         notification_service.broadcast_to_admins_sync({
             "type": "new_transaction",
@@ -83,7 +86,7 @@ class TransactionService:
             "network": transaction.crypto_network,
             "message": f"New crypto deposit request from user {user_id}"
         })
-        
+
         return transaction
 
     @staticmethod
@@ -145,11 +148,14 @@ class TransactionService:
 
         # Update user's total_usd_sent
         user.total_usd_sent = (user.total_usd_sent or Decimal('0.00')) + crypto_amount
-        
+
+        # Update user's total_withdrawn when UPI payout is created
+        user.total_withdrawn = (user.total_withdrawn or Decimal('0.00')) + net_inr
+
         db.add(transaction)
         db.commit()
         db.refresh(transaction)
-        
+
         # Notify admin
         notification_service.broadcast_to_admins_sync({
             "type": "new_transaction",
@@ -160,7 +166,7 @@ class TransactionService:
             "amount": float(transaction.gross_inr_amount),
             "message": f"New UPI payout request from user {user.id} ({user_phone})"
         })
-        
+
         return transaction
 
     @staticmethod
@@ -231,10 +237,13 @@ class TransactionService:
 
         # Update user's total_usd_sent
         user.total_usd_sent = (user.total_usd_sent or Decimal('0.00')) + crypto_amount
-        
+
+        # Update user's total_withdrawn when admin UPI payout is created
+        user.total_withdrawn = (user.total_withdrawn or Decimal('0.00')) + net_inr
+
         db.commit()
         db.refresh(transaction)
-        
+
         return transaction
 
     @staticmethod
