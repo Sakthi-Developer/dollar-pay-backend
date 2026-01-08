@@ -1,8 +1,10 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, field_serializer
 from typing import Optional, List
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
+
+from app.core.utils import to_ist
 
 
 class TransactionType(str, Enum):
@@ -168,6 +170,10 @@ class TransactionResponse(BaseModel):
     payment_reference: Optional[str] = None
     created_at: Optional[datetime] = None
 
+    @field_serializer("created_at")
+    def serialize_created_at(self, value: Optional[datetime]) -> Optional[datetime]:
+        return to_ist(value)
+
     class Config:
         from_attributes = True
 
@@ -182,6 +188,10 @@ class TransactionDetail(TransactionResponse):
     admin_reviewed_at: Optional[datetime] = None
     payment_completed_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+
+    @field_serializer("admin_reviewed_at", "payment_completed_at", "updated_at")
+    def serialize_datetimes(self, value: Optional[datetime]) -> Optional[datetime]:
+        return to_ist(value)
 
 
 class AdminTransactionApproval(BaseModel):

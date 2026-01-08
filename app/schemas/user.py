@@ -1,8 +1,10 @@
-from pydantic import BaseModel, field_validator, EmailStr
+from pydantic import BaseModel, field_validator, field_serializer, EmailStr
 from typing import Optional, List
 from datetime import datetime
 from decimal import Decimal
 import re
+
+from app.core.utils import to_ist
 
 
 class UserRegister(BaseModel):
@@ -53,6 +55,10 @@ class UserProfile(BaseModel):
     referral_code: str
     is_active: Optional[bool] = True
     created_at: Optional[datetime] = None
+
+    @field_serializer("created_at")
+    def serialize_created_at(self, value: Optional[datetime]) -> Optional[datetime]:
+        return to_ist(value)
 
     class Config:
         from_attributes = True
@@ -146,6 +152,10 @@ class AdminProfile(BaseModel):
     is_active: Optional[bool] = True
     created_at: Optional[datetime] = None
 
+    @field_serializer("created_at")
+    def serialize_created_at(self, value: Optional[datetime]) -> Optional[datetime]:
+        return to_ist(value)
+
     class Config:
         from_attributes = True
 
@@ -158,6 +168,10 @@ class AdminResponse(BaseModel):
     is_active: Optional[bool] = True
     created_at: Optional[datetime] = None
     message: str
+
+    @field_serializer("created_at")
+    def serialize_created_at(self, value: Optional[datetime]) -> Optional[datetime]:
+        return to_ist(value)
 
 
 class AdminTokenResponse(BaseModel):
@@ -172,6 +186,10 @@ class TeamMemberSchema(BaseModel):
     joined_at: datetime
     level: int
 
+    @field_serializer("joined_at")
+    def serialize_joined_at(self, value: datetime) -> datetime:
+        return to_ist(value)
+
 
 class CommissionSchema(BaseModel):
     id: int
@@ -179,6 +197,10 @@ class CommissionSchema(BaseModel):
     from_user_id: int
     level: int
     created_at: datetime
+
+    @field_serializer("created_at")
+    def serialize_created_at(self, value: datetime) -> datetime:
+        return to_ist(value)
 
 
 class PaginatedUserResponse(BaseModel):
