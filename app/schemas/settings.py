@@ -28,15 +28,8 @@ class TelegramLinksResponse(BaseModel):
     links: List[TelegramLink]
 
 
-class BannerImage(BaseModel):
-    id: int
-    image_url: str
-    title: Optional[str] = None
-    link_url: Optional[str] = None
-
-
 class BannerImagesResponse(BaseModel):
-    banners: List[BannerImage]
+    banners: List[str]
 
 
 class SettingUpdate(BaseModel):

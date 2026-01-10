@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.models.settings import PlatformSetting
-from app.schemas.settings import TelegramLinksResponse, TelegramLink, BannerImagesResponse, BannerImage
+from app.schemas.settings import TelegramLinksResponse, TelegramLink, BannerImagesResponse
 
 router = APIRouter()
 
@@ -34,8 +34,9 @@ def get_home_banners(db: Session = Depends(get_db)):
         return BannerImagesResponse(banners=[])
 
     try:
-        banners_data = json.loads(setting.setting_value)
-        banners = [BannerImage(**banner) for banner in banners_data]
-        return BannerImagesResponse(banners=banners)
+        banners = json.loads(setting.setting_value)
+        if isinstance(banners, list):
+            return BannerImagesResponse(banners=banners)
+        return BannerImagesResponse(banners=[])
     except (json.JSONDecodeError, TypeError):
         return BannerImagesResponse(banners=[])
