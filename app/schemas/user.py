@@ -104,8 +104,8 @@ class BindBankAccount(BaseModel):
     @field_validator("ifsc_code")
     @classmethod
     def validate_ifsc(cls, v):
-        if not re.match(r"^[A-Z]{4}0[A-Z0-9]{6}$", v):
-            raise ValueError("Invalid IFSC code format")
+        if not re.match(r"^[A-Za-z0-9]{4,20}$", v):
+            raise ValueError("IFSC code must be 4-20 alphanumeric characters")
         return v.upper()
 
     @field_validator("account_number")
