@@ -67,6 +67,18 @@ def init_platform_settings():
             "setting_value": "",
             "data_type": "string",
             "description": "ERC-20 USDT wallet address"
+        },
+        {
+            "setting_key": "telegram_links",
+            "setting_value": '[{"type": "promotion", "name": "Promotion Group", "url": ""}, {"type": "support", "name": "Private Support", "url": ""}]',
+            "data_type": "json",
+            "description": "Telegram support links (promotion group and private support)"
+        },
+        {
+            "setting_key": "home_banners",
+            "setting_value": '[]',
+            "data_type": "json",
+            "description": "Home screen banner images"
         }
     ]
 

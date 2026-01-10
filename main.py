@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.db.database import init_db
-from app.routers import auth, user, transactions, dashboard, notifications, storage
+from app.routers import auth, user, transactions, dashboard, notifications, storage, app_config
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -30,6 +30,7 @@ app.include_router(user, tags=["User"])
 app.include_router(transactions, tags=["Transactions"])
 app.include_router(dashboard, tags=["Dashboard"])
 app.include_router(notifications, tags=["Notifications"])
+app.include_router(app_config, tags=["App Config"])
 
 @app.get("/")
 def root():

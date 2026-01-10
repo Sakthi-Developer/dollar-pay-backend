@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from decimal import Decimal
-from typing import Optional
+from typing import Optional, List
 
 
 class PlatformSettings(BaseModel):
@@ -16,6 +16,27 @@ class PlatformSettings(BaseModel):
     telegram_support_url: str = ""
     trc20_wallet_address: str = ""
     erc20_wallet_address: str = ""
+
+
+class TelegramLink(BaseModel):
+    type: str  # "promotion" or "support"
+    name: str
+    url: str
+
+
+class TelegramLinksResponse(BaseModel):
+    links: List[TelegramLink]
+
+
+class BannerImage(BaseModel):
+    id: int
+    image_url: str
+    title: Optional[str] = None
+    link_url: Optional[str] = None
+
+
+class BannerImagesResponse(BaseModel):
+    banners: List[BannerImage]
 
 
 class SettingUpdate(BaseModel):
